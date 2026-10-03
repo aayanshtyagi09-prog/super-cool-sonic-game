@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sonic Ultimate Custom Engine - Play Free Online</title>
+    <title>Sonic Ultimate Custom Engine</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background: #050508; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
@@ -11,78 +11,66 @@
         canvas { width: 100%; height: 100%; display: block; }
         .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(10, 15, 30, 0.96); z-index: 10; padding: 20px; text-align: center; }
         .hidden { display: none !important; }
-        h1 { font-size: 2.4rem; margin-bottom: 12px; color: #38bdf8; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(56,189,248,0.5); }
-        .setup-area { display: flex; gap: 20px; width: 100%; max-height: 270px; margin-bottom: 15px; }
-        .roster-grid { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; overflow-y: auto; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px solid #334155; }
+        h1 { font-size: 2.2rem; margin-bottom: 12px; color: #38bdf8; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(56,189,248,0.5); }
+        .roster-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 15px; }
         .char-card { background: #1e293b; border: 2px solid transparent; border-radius: 8px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; transition: all 0.2s; }
-        .char-card:hover { background: #2d3748; transform: translateY(-2px); }
-        .char-card.selected { border-color: #38bdf8; background: #0369a1; box-shadow: 0 0 12px rgba(56,189,248,0.6); }
-        .char-preview-thumb { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #fff; margin-bottom: 6px; display: inline-block; background-size: cover; background-position: center; }
-        .char-name { font-size: 0.75rem; font-weight: bold; text-transform: uppercase; text-align: center; }
-        .diff-row { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; justify-content: center; flex-wrap: wrap; }
-        .btn-diff { background: #334155; border: 1px solid #475569; padding: 6px 14px; font-size: 0.75rem; border-radius: 6px; color: #cbd5e1; cursor: pointer; transition: all 0.2s; font-weight: bold; }
-        .btn-diff.selected { border-color: #38bdf8; color: #fff; background: #2563eb; box-shadow: 0 0 10px rgba(37,99,235,0.5); }
-        .btn-diff[data-diff="scary"].selected { background: #7f1d1d; border-color: #f87171; text-shadow: 0 0 5px red; box-shadow: 0 0 15px rgba(255,0,0,0.6); }
-        .btn-diff[data-diff="quiz"].selected { background: #d97706; box-shadow: 0 0 10px rgba(217,119,6,0.5); }
-        .btn-start { background: #2563eb; color: #fff; border: none; padding: 10px 35px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 14px rgba(37,99,235,0.4); }
+        .char-card:hover { background: #2d3748; }
+        .char-card.selected { border-color: #38bdf8; background: #0369a1; }
+        .char-color-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; margin-bottom: 4px; }
+        .char-name { font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
+        .diff-row { display: flex; gap: 8px; margin-bottom: 15px; }
+        .btn-diff { background: #334155; border: 1px solid #475569; padding: 6px 14px; font-size: 0.75rem; border-radius: 6px; color: #cbd5e1; cursor: pointer; font-weight: bold; }
+        .btn-diff.selected { border-color: #38bdf8; color: #fff; background: #2563eb; }
+        .btn-start { background: #2563eb; color: #fff; border: none; padding: 10px 35px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
         #hud-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; }
-        .hud-top { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; }
-        .hud-stats { display: flex; flex-direction: column; gap: 4px; background: rgba(0,0,0,0.65); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); font-family: monospace; font-size: 0.85rem; }
-        .stat-line span { color: #facc15; font-weight: bold; }
+        .hud-top { display: flex; justify-content: space-between; width: 100%; }
+        .hud-stats { background: rgba(0,0,0,0.65); padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1); }
         .hud-actions { display: flex; gap: 8px; pointer-events: auto; }
-        .btn-hud { background: rgba(30,41,59,0.85); border: 1px solid #475569; border-radius: 6px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; font-size: 1rem; }
-        .ability-bar { display: flex; gap: 6px; background: rgba(0,0,0,0.75); padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); pointer-events: auto; align-self: center; margin-bottom: 4px; }
-        .btn-ability { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 68px; height: 54px; background: #1e293b; border: 2px solid #475569; border-radius: 6px; color: #fff; cursor: pointer; font-size: 0.65rem; font-weight: bold; position: relative; }
-        .btn-ability span.hotkey { position: absolute; top: 2px; right: 4px; font-size: 0.55rem; color: #94a3b8; }
-        .btn-ability span.label { text-align: center; line-height: 1.1; margin-top: 8px; }
-        #dialogue-overlay { position: absolute; bottom: 85px; left: 5%; width: 90%; background: rgba(6,10,25,0.95); border: 3px solid #38bdf8; border-radius: 10px; z-index: 8; padding: 12px; display: flex; gap: 15px; align-items: center; pointer-events: auto; box-shadow: 0 0 25px rgba(0,0,0,0.9); }
-        #dialogue-overlay.scary-dialogue { background: rgba(15,0,0,0.98); border-color: #dc2626; }
-        #dialogue-overlay.fools-dialogue { background: rgba(30,15,5,0.95); border-color: #d97706; }
-        .dialogue-portrait { width: 55px; height: 55px; border-radius: 8px; border: 2px solid #fff; background-size: cover; background-position: center; }
-        .dialogue-body { flex: 1; display: flex; flex-direction: column; gap: 4px; text-align: left; }
+        .btn-hud { background: rgba(30,41,59,0.85); border: 1px solid #475569; border-radius: 6px; width: 36px; height: 36px; color: #fff; cursor: pointer; font-weight: bold; }
+        .ability-bar { display: flex; gap: 6px; background: rgba(0,0,0,0.75); padding: 8px; border-radius: 8px; pointer-events: auto; align-self: center; }
+        .btn-ability { width: 68px; height: 44px; background: #1e293b; border: 2px solid #475569; border-radius: 6px; color: #fff; cursor: pointer; font-size: 0.7rem; font-weight: bold; }
+        #dialogue-overlay { position: absolute; bottom: 75px; left: 5%; width: 90%; background: rgba(6,10,25,0.95); border: 3px solid #38bdf8; border-radius: 10px; z-index: 8; padding: 12px; display: flex; gap: 15px; align-items: center; pointer-events: auto; }
+        .dialogue-portrait { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #fff; }
+        .dialogue-body { flex: 1; text-align: left; }
         .dialogue-speaker { font-weight: bold; font-size: 0.9rem; color: #38bdf8; text-transform: uppercase; }
-        .dialogue-text { font-size: 0.8rem; line-height: 1.3; color: #f1f5f9; min-height: 32px; }
+        .dialogue-text { font-size: 0.8rem; color: #f1f5f9; }
         .quiz-container { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
-        .btn-answer { background: #1e293b; border: 1px solid #475569; padding: 6px; border-radius: 4px; color: #fff; font-size: 0.75rem; cursor: pointer; }
-        #scary-filter { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(220,38,38,0.12); pointer-events:none; z-index: 6; mix-blend-mode: color-burn; }
-        #scary-static { position: absolute; top:0; left:0; width:100%; height:100%; background: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://w3.org"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E'); opacity: 0.07; pointer-events:none; z-index:7; }
-        .controls-hint { margin-top: 15px; color: #64748b; font-size: 0.8rem; text-align: center; }
-        .controls-hint span { color: #94a3b8; font-weight: bold; background: #1e293b; padding: 2px 6px; border-radius: 4px; }
+        .btn-answer { background: #1e293b; border: 1px solid #475569; padding: 6px; border-radius: 4px; color: #fff; font-size: 0.75rem; cursor: pointer; text-align: left; }
     </style>
 </head>
 <body>
-    <div id="scary-filter" class="hidden"></div>
-    <div id="scary-static" class="hidden"></div>
+
     <div id="game-container">
         <canvas id="gameCanvas" width="800" height="480"></canvas>
+
+        <!-- START MENU SCREEN -->
         <div id="menu-screen" class="screen">
             <h1>Sonic Custom Engine</h1>
-            <div class="setup-area">
-                <div class="roster-grid" id="roster"></div>
-            </div>
+            <div class="roster-grid" id="roster"></div>
             <div class="diff-row">
-                <button class="btn-diff" data-diff="easy">EASY</button>
-                <button class="btn-diff selected" data-diff="medium">MEDIUM</button>
-                <button class="btn-diff" data-diff="hard">HARD</button>
+                <button class="btn-diff selected" data-diff="medium">NORMAL</button>
                 <button class="btn-diff" data-diff="scary">SCARY MODE</button>
-                <button class="btn-diff" data-diff="quiz">7-YR QUIZ (FOOLS)</button>
+                <button class="btn-diff" data-diff="quiz">7-YR QUIZ</button>
             </div>
             <button class="btn-start" id="btn-play">Start Game</button>
         </div>
+
+        <!-- HEADS UP DISPLAY HUD -->
         <div id="hud-layer" class="hidden">
             <div class="hud-top">
                 <div class="hud-stats">
-                    <div class="stat-line">CHARACTER: <span id="hud-char-name">SONIC</span></div>
-                    <div class="stat-line">RINGS: <span id="hud-rings">0</span></div>
-                    <div class="stat-line">SCORE: <span id="hud-score">0</span></div>
-                    <div class="stat-line">SPEED: <span id="hud-speed">0 mph</span></div>
+                    <div>CHARACTER: <span id="hud-char-name" style="color:#38bdf8;">SONIC</span></div>
+                    <div>RINGS: <span id="hud-rings" style="color:#facc15;">0</span></div>
+                    <div>SCORE: <span id="hud-score" style="color:#4ade80;">0</span></div>
+                    <div>SPEED: <span id="hud-speed">0 mph</span></div>
                 </div>
                 <div class="hud-actions">
-                    <button class="btn-hud" id="btn-story-trigger">🎬</button>
-                    <button class="btn-hud" id="btn-mute">🔊</button>
+                    <button class="btn-hud" id="btn-talk">🎬</button>
                     <button class="btn-hud" id="btn-restart">🔄</button>
                 </div>
             </div>
+
+            <!-- POPUP TEXT & QUIZ BOX -->
             <div id="dialogue-overlay" class="hidden">
                 <div class="dialogue-portrait" id="diag-portrait"></div>
                 <div class="dialogue-body">
@@ -91,182 +79,198 @@
                     <div class="quiz-container hidden" id="diag-quiz-box"></div>
                 </div>
             </div>
+
+            <!-- ACTION ABILITY SURGE BAR -->
             <div class="ability-bar">
-                <button class="btn-ability" data-index="0"><span class="hotkey">1</span><span class="label">DASH</span></button>
-                <button class="btn-ability" data-index="1"><span class="hotkey">2</span><span class="label">FLY</span></button>
-                <button class="btn-ability" data-index="2"><span class="hotkey">3</span><span class="label">ATTACK</span></button>
-                <button class="btn-ability" data-index="3"><span class="hotkey">4</span><span class="label">SHIELD</span></button>
-                <button class="btn-ability" data-index="4"><span class="hotkey">5</span><span class="label">HYPER</span></button>
+                <button class="btn-ability" data-index="0">1: DASH</button>
+                <button class="btn-ability" data-index="1">2: FLY</button>
+                <button class="btn-ability" data-index="2">3: ATTACK</button>
+                <button class="btn-ability" data-index="3">4: SHIELD</button>
+                <button class="btn-ability" data-index="4">5: HYPER</button>
             </div>
         </div>
     </div>
+
     <script>
+        // Roster data with built-in color configurations
         const ROSTER = [
-            { id: "sonic", name: "Sonic", sprite: "https://uncyc.org", line: "Gotta go fast! You can't catch what you can't see!" },
-            { id: "shadow", name: "Shadow", sprite: "https://uncyc.org", line: "I am the Ultimate Lifeform. You are wasting my time." },
-            { id: "tails", name: "Tails", sprite: "https://uncyc.org", line: "I'm not dead! Let's complete the dynamic mission!" },
-            { id: "knuckles", name: "Knuckles", sprite: "https://uncyc.org", line: "My fists will shatter your mechanical playthings!" },
-            { id: "metal_sonic", name: "Metal Sonic", sprite: "https://uncyc.org", line: "PRIMARY OBJECTIVE LOGIC: ANNIHILATE TARGET INSTANTLY." }
+            { id: "sonic", name: "Sonic", primary: "#0066cc", secondary: "#eab308", line: "Gotta go fast! You can't catch what you can't see!" },
+            { id: "shadow", name: "Shadow", primary: "#1e1e1e", secondary: "#dc2626", line: "I am the Ultimate Lifeform. You are wasting my time." },
+            { id: "tails", name: "Tails", primary: "#f59e0b", secondary: "#ffffff", line: "I'm not dead! Let's complete the dynamic mission!" },
+            { id: "knuckles", name: "Knuckles", primary: "#dc2626", secondary: "#eab308", line: "My fists will shatter your playthings!" },
+            { id: "dark_clone", name: "Dark Sonic", primary: "#2e1065", secondary: "#000000", line: "You cannot escape the reach of the void..." }
         ];
+
         const FACTS_QUIZ = [
-            { q: "What is 4 + 3?", a: ["7", "6", "9", "5"], c: 0 },
-            { q: "Spell the word for this color: 🔴", a: ["Blue", "Red", "Green", "Pink"], c: 1 },
-            { q: "Which animal is known as the King of the Jungle?", a: ["Monkey", "Elephant", "Lion", "Giraffe"], c: 2 }
+            { q: "What is 5 + 2?", a: ["7", "6", "9", "4"], c: 0 },
+            { q: "What color is a clean strawberry?", a: ["Blue", "Red", "Green"], c: 1 },
+            { q: "Which animal says 'Meow'?", a: ["Dog", "Lion", "Cat"], c: 2 }
         ];
-        let appState = "menu"; let chosenCharacter = ROSTER; let currentDifficulty = "medium";
+
+        let appState = "menu"; let chosenCharacter = ROSTER[0]; let currentDifficulty = "medium";
         let score = 0; let rings = 0; let runningDistance = 0; let globalGameSpeed = 0; let targetSpeed = 8;
-        let audioMuted = false; let currentQuizIndex = 0; let gravityDirection = 1;
+        let currentQuizIndex = 0; let gravityDirection = 1; let animFrame = 0;
+
         const canvas = document.getElementById("gameCanvas"); const ctx = canvas.getContext("2d");
-        let player = { x: 384, y: 292, vx: 0, vy: 0, width: 45, height: 48, isJumping: false, form: "normal", flightTicks: 0, img: new Image() };
-        let boss = { x: 650, y: 260, hp: 100, maxHp: 100, floatOffset: 0, img: new Image() };
-        boss.img.src = "https://uncyc.org";
-        let particlesArray = []; let debrisArray = []; let trackRings = []; let trackObstacles = []; let terrainOffset = 0;
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playBeep(freq, type, duration) {
-            if (audioMuted) return;
-            try {
-                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-                osc.type = type || "sine"; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.08, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.005, audioCtx.currentTime + duration);
-                osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration);
-            } catch(e) {}
-        }
+        let player = { x: 350, y: 292, vy: 0, width: 36, height: 46, isJumping: false, form: "normal", flightTicks: 0 };
+        let boss = { x: 650, y: 240, hp: 100, floatOffset: 0 };
+        let trackRings = []; let trackObstacles = []; let debrisArray = [];
+
+        // Setup the Character Grid Interface
         const rosterContainer = document.getElementById("roster");
         ROSTER.forEach((char, idx) => {
-            const card = document.createElement("div"); card.className = `char-card ${idx === 0 ? 'selected' : ''}`;
-            const thumb = document.createElement("span"); thumb.className = "char-preview-thumb"; thumb.style.backgroundImage = `url('${char.sprite}')`;
-            const nameEl = document.createElement("div"); nameEl.className = "char-name"; nameEl.textContent = char.name;
-            card.appendChild(thumb); card.appendChild(nameEl); rosterContainer.appendChild(card);
+            const card = document.createElement("div");
+            card.className = `char-card ${idx === 0 ? 'selected' : ''}`;
+            
+            const dot = document.createElement("div");
+            dot.className = "char-color-dot";
+            dot.style.backgroundColor = char.primary;
+            
+            const nameEl = document.createElement("div");
+            nameEl.className = "char-name";
+            nameEl.textContent = char.name;
+            
+            card.appendChild(dot); card.appendChild(nameEl); rosterContainer.appendChild(card);
             card.addEventListener("click", () => {
-                document.querySelectorAll(".char-card").forEach(c => c.classList.remove("selected")); card.classList.add("selected");
-                chosenCharacter = char; player.img.src = char.sprite;
+                document.querySelectorAll(".char-card").forEach(c => c.classList.remove("selected"));
+                card.classList.add("selected"); chosenCharacter = char;
             });
         });
-        player.img.src = ROSTER[0].sprite;
+
         document.querySelectorAll(".btn-diff").forEach(btn => {
             btn.addEventListener("click", () => {
-                document.querySelectorAll(".btn-diff").forEach(b => b.classList.remove("selected")); btn.classList.add("selected");
-                currentDifficulty = btn.dataset.diff;
-                if (currentDifficulty === "scary") {
-                    document.getElementById("scary-filter").classList.remove("hidden"); document.getElementById("scary-static").classList.remove("hidden");
-                } else {
-                    document.getElementById("scary-filter").classList.add("hidden"); document.getElementById("scary-static").classList.add("hidden");
-                }
-            });
-        });
-        function updateColorsFromInputs() {}
-        document.getElementById("btn-mute").addEventListener("click", () => { audioMuted = !audioMuted; });
-        document.getElementById("btn-restart").addEventListener("click", () => { resetLevelState(); appState = "play"; });
-        document.getElementById("btn-story-trigger").addEventListener("click", () => { triggerCinematicDialogue(chosenCharacter.name, chosenCharacter.line, false); });
-        document.getElementById("btn-play").addEventListener("click", () => {
-            resetLevelState(); appState = "play";
-            document.getElementById("menu-screen").classList.add("hidden"); document.getElementById("hud-layer").classList.remove("hidden");
-            if (chosenCharacter.id === "tails") { triggerCinematicDialogue("Tails", "I'm not dead! Let's complete the dynamic mission!", false); }
-        });
-        function triggerCinematicDialogue(speaker, text, isQuizInstance) {
-            appState = "dialogue"; const diagOverlay = document.getElementById("dialogue-overlay");
-            const diagSpeaker = document.getElementById("diag-speaker"); const diagText = document.getElementById("diag-text");
-            const quizBox = document.getElementById("diag-quiz-box"); const portrait = document.getElementById("diag-portrait");
-            diagOverlay.classList.remove("hidden", "scary-dialogue", "fools-dialogue"); quizBox.classList.add("hidden"); quizBox.innerHTML = "";
-            if (currentDifficulty === "scary") { diagOverlay.classList.add("scary-dialogue"); diagText.className = "dialogue-text shake-heavy"; }
-            else if (currentDifficulty === "quiz") { diagOverlay.classList.add("fools-dialogue"); diagText.className = "dialogue-text pulse-text"; }
-            else { diagText.className = "dialogue-text"; }
-            diagSpeaker.textContent = speaker; diagText.textContent = text; portrait.style.backgroundImage = `url('${chosenCharacter.sprite}')`;
-            playBeep(220, "triangle", 0.2);
-            if (isQuizInstance) {
-                quizBox.classList.remove("hidden"); const currentQuiz = FACTS_QUIZ[currentQuizIndex];
-                currentQuiz.a.forEach((ans, idx) => {
-                    const btn = document.createElement("button"); btn.className = "btn-answer"; btn.textContent = ans;
-                    btn.addEventListener("click", () => handleQuizAnswer(idx)); quizBox.appendChild(btn);
-                });
-            } else { setTimeout(() => { if (appState === "dialogue" && !isQuizInstance) { closeDialogueLayer(); } }, 3000); }
-        }
-        function closeDialogueLayer() { appState = "play"; document.getElementById("dialogue-overlay").classList.add("hidden"); }
-        function handleQuizAnswer(selectedIdx) {
-            const currentQuiz = FACTS_QUIZ[currentQuizIndex];
-            if (selectedIdx === currentQuiz.c) { rings += 10; score += 500; targetSpeed = 16; playBeep(880, "sine", 0.15); closeDialogueLayer(); } 
-            else { gravityDirection *= -1; targetSpeed = 4; playBeep(140, "sawtooth", 0.35); closeDialogueLayer(); }
-            currentQuizIndex = (currentQuizIndex + 1) % FACTS_QUIZ.length;
-        }
-        document.querySelectorAll(".btn-ability").forEach(btn => {
-            btn.addEventListener("click", () => { if (appState !== "play") return; executeAbilitySlot(parseInt(btn.dataset.index)); });
-        });
-        window.addEventListener("keydown", (e) => {
-            if (appState === "play") {
-                if (e.key === " " || e.key === "ArrowUp") { triggerPlayerJump(); }
-                if (["1","2","3","4","5"].includes(e.key)) { executeAbilitySlot(parseInt(e.key) - 1); }
-            }
-        });
-        function triggerPlayerJump() {
-            if (!player.isJumping || player.form === "hyper") {
-                player.vy = -12.5 * gravityDirection; player.isJumping = true; playBeep(440, "sine", 0.08);
-            }
-        }
-        function executeAbilitySlot(index) {
-            if (index === 0) { targetSpeed = 22; score += 50; }
-            else if (index === 1) { player.vy = -8.5 * gravityDirection; player.flightTicks = 60; }
-            else if (index === 2) { debrisArray.push({ x: player.x + 20, y: player.y + 16, vx: 12, vy: 0, radius: 8, color: "#fff" }); }
-            else if (index === 3) { player.form = "shield"; setTimeout(() => { if(player.form === "shield") player.form = "normal"; }, 3000); }
-            else if (index === 4) { player.form = player.form === "hyper" ? "normal" : "hyper"; targetSpeed = player.form === "hyper" ? 28 : 8; }
-        }
-        function resetLevelState() {
-            score = 0; rings = 0; runningDistance = 0; globalGameSpeed = 6; targetSpeed = 8; gravityDirection = 1; currentQuizIndex = 0;
-            player.x = 384; player.y = 292; player.vx = 0; player.vy = 0; player.isJumping = false; player.form = "normal"; player.flightTicks = 0;
-            boss.x = 650; boss.hp = 100; trackRings = []; trackObstacles = [];
-            for(let i=0; i<6; i++) {
-                trackRings.push({ x: 500 + (i * 140), y: 240 + (Math.sin(i) * 35), active: true });
-                if (i % 2 === 0) { trackObstacles.push({ x: 700 + (i * 220), y: 316, width: 24, height: 24 }); }
-            }
-            debrisArray = []; closeDialogueLayer();
-        }
-        function updateEngineFrame() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (appState === "play") {
-                globalGameSpeed += (targetSpeed - globalGameSpeed) * 0.05; runningDistance += globalGameSpeed * 0.1; terrainOffset -= globalGameSpeed;
-                if (terrainOffset <= -800) terrainOffset = 0;
-                if (currentDifficulty === "quiz" && Math.floor(runningDistance) % 500 === 0 && Math.floor(runningDistance) > 0 && appState === "play") {
-                    triggerCinematicDialogue("QUIZ STATION", FACTS_QUIZ[currentQuizIndex].q, true);
-                }
-                if (player.form === "hyper") {
-                    if (window.keys && (window.keys['ArrowUp'] || window.keys[' '])) { player.vy = -4 * gravityDirection; }
-                    else { player.vy += 0.1 * gravityDirection; player.vy *= 0.9; }
-                } else if (player.flightTicks > 0) { player.vy = -1.5 * gravityDirection; player.flightTicks--; }
-                else { player.vy += 0.55 * gravityDirection; }
-                player.y += player.vy;
-                if (gravityDirection === 1 && player.y >= 292) { player.y = 292; player.vy = 0; player.isJumping = false; }
-                else if (gravityDirection === -1 && player.y <= 60) { player.y = 60; player.vy = 0; player.isJumping = false; }
-            }
-            let skyGrad = ctx.createLinearGradient(0,0,0, canvas.height);
-            if (currentDifficulty === "scary") { skyGrad.addColorStop(0, "#1a0000"); skyGrad.addColorStop(1, "#000000"); }
-            else { skyGrad.addColorStop(0, "#0c4a6e"); skyGrad.addColorStop(1, "#0284c7"); }
-            ctx.fillStyle = skyGrad; ctx.fillRect(0,0, canvas.width, canvas.height);
-            ctx.fillStyle = currentDifficulty === "scary" ? "#3f0000" : "#b45309"; ctx.fillRect(0, 340, canvas.width, 140);
-            ctx.fillStyle = currentDifficulty === "scary" ? "#110000" : "#15803d"; ctx.fillRect(0, 340, canvas.width, 16);
-            if (currentDifficulty !== "scary") {
-                ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
-            } else {
-                ctx.save(); ctx.globalAlpha = 0.9; ctx.fillStyle = "#000"; ctx.fillRect(player.x, player.y, player.width, player.height); ctx.restore();
-            }
-            if (player.form === "shield") { ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(player.x + 22, player.y + 24, 32, 0, Math.PI*2); ctx.stroke(); }
-            boss.floatOffset += 0.05; let currentBossY = boss.y + (Math.sin(boss.floatOffset) * 12);
-            ctx.drawImage(boss.img, 640, currentBossY, 70, 70);
-            trackRings.forEach(r => {
-                if (appState === "play") r.x -= globalGameSpeed; if (r.x < -20) { r.x = canvas.width + 200; r.active = true; }
-if (r.active && Math.abs(player.x - r.x) < 30 && Math.abs(player.y - r.y) < 40) { r.active = false; rings++; score += 100; playBeep(587, "sine", 0.08); }
-if (r.active) { ctx.fillStyle = "#eab308"; ctx.beginPath(); ctx.arc(r.x, r.y, 8, 0, Math.PI2); ctx.fill(); }
+                document.querySelectorAll(".btn-diff").forEach(b => b.classList.remove("selected"));
+                btn.classList.add("selected"); currentDifficulty = btn.dataset.diff;
+});
+});
+document.getElementById("btn-restart").addEventListener("click", () => { resetLevel(); appState = "play"; });
+document.getElementById("btn-talk").addEventListener("click", () => { triggerText(chosenCharacter.name, chosenCharacter.line, false); });
+document.getElementById("btn-play").addEventListener("click", () => {
+resetLevel(); appState = "play";
+document.getElementById("menu-screen").classList.add("hidden");
+document.getElementById("hud-layer").classList.remove("hidden");
+if (chosenCharacter.id === "tails") { triggerText("Tails", "I'm not dead! Let's complete the dynamic mission!", false); }
+});
+function triggerText(speaker, text, isQuiz) {
+appState = "dialogue"; const overlay = document.getElementById("dialogue-overlay");
+overlay.classList.remove("hidden"); document.getElementById("diag-speaker").textContent = speaker;
+document.getElementById("diag-text").textContent = text; document.getElementById("diag-portrait").style.backgroundColor = chosenCharacter.primary;
+const qBox = document.getElementById("diag-quiz-box"); qBox.innerHTML = ""; qBox.classList.add("hidden");
+if (isQuiz) {
+qBox.classList.remove("hidden");
+FACTS_QUIZ[currentQuizIndex].a.forEach((ans, idx) => {
+const btn = document.createElement("button"); btn.className = "btn-answer"; btn.textContent = ans;
+btn.addEventListener("click", () => {
+if (idx === FACTS_QUIZ[currentQuizIndex].c) { targetSpeed = 18; rings += 5; }
+else { gravityDirection *= -1; targetSpeed = 4; }
+currentQuizIndex = (currentQuizIndex + 1) % FACTS_QUIZ.length;
+appState = "play"; overlay.classList.add("hidden");
+});
+qBox.appendChild(btn);
+});
+} else { setTimeout(() => { if(appState === "dialogue") { appState = "play"; overlay.classList.add("hidden"); } }, 2500); }
+}
+document.querySelectorAll(".btn-ability").forEach(btn => {
+btn.addEventListener("click", () => { if (appState === "play") execPower(parseInt(btn.dataset.index)); });
+});
+window.addEventListener("keydown", (e) => {
+if (appState === "play") {
+if ((e.key === " " || e.key === "ArrowUp")) { player.vy = -12 * gravityDirection; player.isJumping = true; }
+if (["1","2","3","4","5"].includes(e.key)) execPower(parseInt(e.key) - 1);
+}
+});
+function execPower(idx) {
+if (idx === 0) targetSpeed = 22;
+if (idx === 1) { player.vy = -8 * gravityDirection; player.flightTicks = 50; }
+if (idx === 2) debrisArray.push({ x: player.x + 30, y: player.y + 20, vx: 12 });
+if (idx === 3) { player.form = "shield"; setTimeout(() => player.form = "normal", 3000); }
+if (idx === 4) { player.form = player.form === "hyper" ? "normal" : "hyper"; targetSpeed = player.form === "hyper" ? 28 : 8; }
+}
+function resetLevel() {
+score = 0; rings = 0; runningDistance = 0; globalGameSpeed = 6; targetSpeed = 8; gravityDirection = 1;
+player.y = 292; player.vy = 0; player.form = "normal"; player.flightTicks = 0; boss.hp = 100;
+trackRings = []; trackObstacles = []; debrisArray = [];
+for(let i=0; i<4; i++) {
+trackRings.push({ x: 500 + (i * 180), y: 240, active: true });
+trackObstacles.push({ x: 700 + (i * 260), y: 316 });
+}
+document.getElementById("dialogue-overlay").classList.add("hidden");
+}
+function drawSonicSprite(x, y, color, shoeColor, isHyper) {
+ctx.save();
+if (isHyper) { ctx.shadowBlur = 20; ctx.shadowColor = hsl(${Date.now() % 360}, 100%, 60%); }
+// Draw round animated spinning body legs blur
+animFrame += globalGameSpeed * 0.05;
+ctx.fillStyle = shoeColor;
+let legY = Math.sin(animFrame) * 6;
+ctx.beginPath(); ctx.arc(x + 10, y + 42 + legY, 6, 0, Math.PI * 2); ctx.fill();
+ctx.beginPath(); ctx.arc(x + 26, y + 42 - legY, 6, 0, Math.PI * 2); ctx.fill();
+// Head and Body Fur
+ctx.fillStyle = color;
+ctx.beginPath(); ctx.arc(x + 18, y + 18, 14, 0, Math.PI * 2); ctx.fill(); // Round Head
+ctx.fillRect(x + 8, y + 22, 20, 20); // Torso
+// Spikes (Math points to make them look like spikes instead of blocks)
+ctx.beginPath();
+ctx.moveTo(x + 6, y + 10); ctx.lineTo(x - 8, y + 6); ctx.lineTo(x + 4, y + 18);
+ctx.moveTo(x + 4, y + 16); ctx.lineTo(x - 10, y + 16); ctx.lineTo(x + 4, y + 24);
+ctx.moveTo(x + 6, y + 22); ctx.lineTo(x - 6, y + 28); ctx.lineTo(x + 10, y + 30);
+ctx.fill();
+// Face details
+ctx.fillStyle = "#fbcfe8"; ctx.beginPath(); ctx.arc(x + 26, y + 22, 6, 0, Math.PI * 2); ctx.fill(); // Muzzle
+ctx.fillStyle = isHyper ? "#ff0000" : "#059669"; ctx.fillRect(x + 24, y + 10, 4, 8); // Heroic Eyes
+ctx.fillStyle = "#000"; ctx.fillRect(x + 25, y + 12, 2, 4); // Pupil
+ctx.restore();
+}
+function updateEngine() {
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+if (appState === "play") {
+globalGameSpeed += (targetSpeed - globalGameSpeed) * 0.05; runningDistance += globalGameSpeed * 0.1; terrainOffset -= globalGameSpeed;
+if (terrainOffset <= -800) terrainOffset = 0;
+if (player.form === "hyper" && player.isJumping) { player.vy = -1 * gravityDirection; }
+else if (player.flightTicks > 0) { player.vy = -1.5 * gravityDirection; player.flightTicks--; }
+else { player.vy += 0.55 * gravityDirection; }
+player.y += player.vy;
+if (gravityDirection === 1 && player.y >= 292) { player.y = 292; player.isJumping = false; }
+if (gravityDirection === -1 && player.y <= 60) { player.y = 60; player.isJumping = false; }
+if (currentDifficulty === "quiz" && Math.floor(runningDistance) % 500 === 0 && Math.floor(runningDistance) > 0) {
+triggerText("QUIZ ENGINE", FACTS_QUIZ[currentQuizIndex].q, true);
+}
+}
+// Draw Sky Backdrop
+let sky = ctx.createLinearGradient(0,0,0, canvas.height);
+sky.addColorStop(0, currentDifficulty === "scary" ? "#1a0000" : "#0c4a6e"); sky.addColorStop(1, "#050508");
+ctx.fillStyle = sky; ctx.fillRect(0,0, canvas.width, canvas.height);
+// Draw Checkered Loop Ground track
+ctx.fillStyle = currentDifficulty === "scary" ? "#3f0000" : "#b45309"; ctx.fillRect(0, 340, canvas.width, 140);
+ctx.fillStyle = currentDifficulty === "scary" ? "#110000" : "#15803d"; ctx.fillRect(0, 340, canvas.width, 16);
+// Draw properly rendered Sonic Shape Character
+let bodyColor = currentDifficulty === "scary" ? "#000000" : chosenCharacter.primary;
+let bootColor = currentDifficulty === "scary" ? "#ff0000" : chosenCharacter.secondary;
+if (player.form === "hyper") bodyColor = hsl(${Date.now() % 360}, 100%, 70%);
+drawSonicSprite(player.x, player.y, bodyColor, bootColor, player.form === "hyper");
+if(player.form === "shield") { ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(player.x+18, player.y+24, 30, 0, Math.PI*2); ctx.stroke(); }
+// Render Eggman Boss Craft
+boss.floatOffset += 0.05; let bY = boss.y + (Math.sin(boss.floatOffset) * 12);
+ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(640, bY, 26, 0, Math.PI*2); ctx.fill(); // Eggmobile capsule hull
+ctx.fillStyle = "#94a3b8"; ctx.fillRect(610, bY, 60, 16); // Metal canopy rims
+// Collisions loops logic checks
+trackRings.forEach(r => {
+if(appState === "play") r.x -= globalGameSpeed; if(r.x < -20) r.x = canvas.width + 200;
+if(r.active && Math.abs(player.x - r.x) < 30 && Math.abs(player.y - r.y) < 40) { r.active = false; rings++; score += 100; playBeep(600, "sine", 0.05); }
+if(r.active) { ctx.fillStyle = "#eab308"; ctx.beginPath(); ctx.arc(r.x, r.y, 8, 0, Math.PI2); ctx.fill(); }
 });
 trackObstacles.forEach(o => {
-if (appState === "play") o.x -= globalGameSpeed; if (o.x < -50) o.x = canvas.width + 400;
-if (Math.abs(player.x - o.x) < 24 && Math.abs(player.y - o.y) < 36) { o.x = canvas.width + 500; if (player.form !== "shield" && player.form !== "hyper") rings = Math.max(0, rings - 5); }
+if(appState === "play") o.x -= globalGameSpeed; if(o.x < -20) o.x = canvas.width + 300;
+if(Math.abs(player.x - o.x) < 24 && Math.abs(player.y - o.y) < 40) { o.x = canvas.width + 400; if(player.form !== "shield" && player.form !== "hyper") rings = 0; playBeep(150, "triangle", 0.2); }
 ctx.fillStyle = "#475569"; ctx.fillRect(o.x, o.y, 24, 24);
 });
 debrisArray.forEach((d, i) => {
 d.x += d.vx; ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(d.x, d.y, 6, 0, Math.PI2); ctx.fill();
-if (d.x > 620 && Math.abs(d.y - currentBossY - 35) < 40) { boss.hp -= 10; score += 1000; debrisArray.splice(i, 1); }
+if(d.x > 620 && Math.abs(d.y - bY) < 40) { boss.hp -= 10; score += 1000; debrisArray.splice(i, 1); playBeep(700, "square", 0.05); }
 });
-document.getElementById("hud-rings").textContent = rings; document.getElementById("hud-score").textContent = score;
+document.getElementById("hud-rings").textContent = rings;
+document.getElementById("hud-score").textContent = score;
 document.getElementById("hud-speed").textContent = ${Math.floor(globalGameSpeed * 5)} mph;
-requestAnimationFrame(updateEngineFrame);
+requestAnimationFrame(updateEngine);
 }
-window.keys = {}; window.addEventListener('keydown', (e) => { window.keys[e.key] = true; }); window.addEventListener('keyup', (e) => { window.keys[e.key] = false; });
-updateEngineFrame();
+updateEngine();
