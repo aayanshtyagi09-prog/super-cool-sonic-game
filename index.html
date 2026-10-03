@@ -17,13 +17,8 @@
         .char-card { background: #1e293b; border: 2px solid transparent; border-radius: 8px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; transition: all 0.2s; }
         .char-card:hover { background: #2d3748; transform: translateY(-2px); }
         .char-card.selected { border-color: #38bdf8; background: #0369a1; box-shadow: 0 0 12px rgba(56,189,248,0.6); }
-        .char-preview-thumb { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #fff; margin-bottom: 6px; display: inline-block; }
+        .char-preview-thumb { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #fff; margin-bottom: 6px; display: inline-block; background-size: cover; background-position: center; }
         .char-name { font-size: 0.75rem; font-weight: bold; text-transform: uppercase; text-align: center; }
-        .customizer-panel { width: 230px; background: rgba(30, 41, 59, 0.85); border-radius: 8px; border: 1px solid #334155; padding: 12px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
-        .customizer-panel h3 { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px solid #334155; padding-bottom: 4px; }
-        .color-row { display: flex; flex-direction: column; gap: 2px; }
-        .color-row label { font-size: 0.7rem; color: #cbd5e1; }
-        .color-row input[type="color"] { width: 100%; height: 26px; border: none; border-radius: 4px; cursor: pointer; background: transparent; }
         .diff-row { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; justify-content: center; flex-wrap: wrap; }
         .btn-diff { background: #334155; border: 1px solid #475569; padding: 6px 14px; font-size: 0.75rem; border-radius: 6px; color: #cbd5e1; cursor: pointer; transition: all 0.2s; font-weight: bold; }
         .btn-diff.selected { border-color: #38bdf8; color: #fff; background: #2563eb; box-shadow: 0 0 10px rgba(37,99,235,0.5); }
@@ -43,16 +38,12 @@
         #dialogue-overlay { position: absolute; bottom: 85px; left: 5%; width: 90%; background: rgba(6,10,25,0.95); border: 3px solid #38bdf8; border-radius: 10px; z-index: 8; padding: 12px; display: flex; gap: 15px; align-items: center; pointer-events: auto; box-shadow: 0 0 25px rgba(0,0,0,0.9); }
         #dialogue-overlay.scary-dialogue { background: rgba(15,0,0,0.98); border-color: #dc2626; }
         #dialogue-overlay.fools-dialogue { background: rgba(30,15,5,0.95); border-color: #d97706; }
-        .dialogue-portrait { width: 55px; height: 55px; border-radius: 8px; border: 2px solid #fff; }
+        .dialogue-portrait { width: 55px; height: 55px; border-radius: 8px; border: 2px solid #fff; background-size: cover; background-position: center; }
         .dialogue-body { flex: 1; display: flex; flex-direction: column; gap: 4px; text-align: left; }
         .dialogue-speaker { font-weight: bold; font-size: 0.9rem; color: #38bdf8; text-transform: uppercase; }
         .dialogue-text { font-size: 0.8rem; line-height: 1.3; color: #f1f5f9; min-height: 32px; }
         .quiz-container { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
         .btn-answer { background: #1e293b; border: 1px solid #475569; padding: 6px; border-radius: 4px; color: #fff; font-size: 0.75rem; cursor: pointer; }
-        .shake-heavy { animation: shake 0.15s infinite alternate; }
-        .pulse-text { animation: pulseText 0.5s infinite alternate; }
-        @keyframes shake { 0% { transform: translate(2px, 1px); } 100% { transform: translate(1px, -2px); } }
-        @keyframes pulseText { 0% { transform: scale(1); } 100% { transform: scale(1.03); } }
         #scary-filter { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(220,38,38,0.12); pointer-events:none; z-index: 6; mix-blend-mode: color-burn; }
         #scary-static { position: absolute; top:0; left:0; width:100%; height:100%; background: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://w3.org"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E'); opacity: 0.07; pointer-events:none; z-index:7; }
         .controls-hint { margin-top: 15px; color: #64748b; font-size: 0.8rem; text-align: center; }
@@ -68,12 +59,6 @@
             <h1>Sonic Custom Engine</h1>
             <div class="setup-area">
                 <div class="roster-grid" id="roster"></div>
-                <div class="customizer-panel">
-                    <h3>Skin Customizer</h3>
-                    <div class="color-row"><label>Body Fur:</label><input type="color" id="color-body" value="#0066cc"></div>
-                    <div class="color-row"><label>Accent:</label><input type="color" id="color-accent" value="#ffffff"></div>
-                    <div class="color-row"><label>Shoes:</label><input type="color" id="color-shoes" value="#cc0000"></div>
-                </div>
             </div>
             <div class="diff-row">
                 <button class="btn-diff" data-diff="easy">EASY</button>
@@ -117,30 +102,24 @@
     </div>
     <script>
         const ROSTER = [
-            { id: "sonic", name: "Sonic", fur: "#0066cc", accent: "#e2e8f0", shoes: "#cc0000", line: "Gotta go fast! You can't catch what you can't see!" },
-            { id: "shadow", name: "Shadow", fur: "#1e1e1e", accent: "#dc2626", shoes: "#ffffff", line: "I am the Ultimate Lifeform. You are wasting my time." },
-            { id: "tails", name: "Tails", fur: "#eab308", accent: "#ffffff", shoes: "#cc0000", line: "I'm not dead! Let's complete the dynamic mission!" },
-            { id: "knuckles", name: "Knuckles", fur: "#dc2626", accent: "#ffffff", shoes: "#eab308", line: "My fists will shatter your mechanical playthings!" },
-            { id: "dark_clone", name: "Dark Sonic Clone", fur: "#2e1065", accent: "#000000", shoes: "#4c1d95", line: "You cannot escape the reach of the dark void glitches..." },
-            { id: "silver", name: "Silver", fur: "#cbd5e1", accent: "#38bdf8", shoes: "#0f172a", line: "It's no use! I must save the absolute timeline!" },
-            { id: "blaze", name: "Blaze", fur: "#a855f7", accent: "#eab308", shoes: "#ec4899", line: "The imperial flames will engulf any obstacle in our path." },
-            { id: "metal_sonic", name: "Metal Sonic", fur: "#1d4ed8", accent: "#000000", shoes: "#cc0000", line: "PRIMARY OBJECTIVE LOGIC: ANNIHILATE TARGET INSTANTLY." },
-            { id: "jet", name: "Jet", fur: "#047857", accent: "#ffffff", shoes: "#d97706", line: "The Babylon Rogues dominate the absolute high-speed airways!" }
+            { id: "sonic", name: "Sonic", sprite: "https://uncyc.org", line: "Gotta go fast! You can't catch what you can't see!" },
+            { id: "shadow", name: "Shadow", sprite: "https://uncyc.org", line: "I am the Ultimate Lifeform. You are wasting my time." },
+            { id: "tails", name: "Tails", sprite: "https://uncyc.org", line: "I'm not dead! Let's complete the dynamic mission!" },
+            { id: "knuckles", name: "Knuckles", sprite: "https://uncyc.org", line: "My fists will shatter your mechanical playthings!" },
+            { id: "metal_sonic", name: "Metal Sonic", sprite: "https://uncyc.org", line: "PRIMARY OBJECTIVE LOGIC: ANNIHILATE TARGET INSTANTLY." }
         ];
         const FACTS_QUIZ = [
             { q: "What is 4 + 3?", a: ["7", "6", "9", "5"], c: 0 },
             { q: "Spell the word for this color: 🔴", a: ["Blue", "Red", "Green", "Pink"], c: 1 },
-            { q: "Which animal is known as the King of the Jungle?", a: ["Monkey", "Elephant", "Lion", "Giraffe"], c: 2 },
-            { q: "What is the primary color of Sonic the Hedgehog?", a: ["Green", "Blue", "Yellow", "Black"], c: 1 },
-            { q: "How many legs does a spider have?", a: ["6", "10", "4", "8"], c: 3 }
+            { q: "Which animal is known as the King of the Jungle?", a: ["Monkey", "Elephant", "Lion", "Giraffe"], c: 2 }
         ];
-        let appState = "menu"; let chosenCharacter = ROSTER[0]; let currentDifficulty = "medium";
+        let appState = "menu"; let chosenCharacter = ROSTER; let currentDifficulty = "medium";
         let score = 0; let rings = 0; let runningDistance = 0; let globalGameSpeed = 0; let targetSpeed = 8;
         let audioMuted = false; let currentQuizIndex = 0; let gravityDirection = 1;
-        let customColors = { fur: "#0066cc", accent: "#ffffff", shoes: "#cc0000" };
         const canvas = document.getElementById("gameCanvas"); const ctx = canvas.getContext("2d");
-        let player = { x: 384, y: 292, vx: 0, vy: 0, width: 32, height: 48, isJumping: false, form: "normal", flightTicks: 0 };
-        let boss = { x: 650, y: 260, hp: 100, maxHp: 100, floatOffset: 0 };
+        let player = { x: 384, y: 292, vx: 0, vy: 0, width: 45, height: 48, isJumping: false, form: "normal", flightTicks: 0, img: new Image() };
+        let boss = { x: 650, y: 260, hp: 100, maxHp: 100, floatOffset: 0, img: new Image() };
+        boss.img.src = "https://uncyc.org";
         let particlesArray = []; let debrisArray = []; let trackRings = []; let trackObstacles = []; let terrainOffset = 0;
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playBeep(freq, type, duration) {
@@ -154,17 +133,16 @@
         }
         const rosterContainer = document.getElementById("roster");
         ROSTER.forEach((char, idx) => {
-            const card = document.createElement("div"); card.className = `char-card ${idx === 0 ? 'selected' : ''}`; card.dataset.id = char.id;
-            const thumb = document.createElement("span"); thumb.className = "char-preview-thumb"; thumb.style.backgroundColor = char.fur;
+            const card = document.createElement("div"); card.className = `char-card ${idx === 0 ? 'selected' : ''}`;
+            const thumb = document.createElement("span"); thumb.className = "char-preview-thumb"; thumb.style.backgroundImage = `url('${char.sprite}')`;
             const nameEl = document.createElement("div"); nameEl.className = "char-name"; nameEl.textContent = char.name;
             card.appendChild(thumb); card.appendChild(nameEl); rosterContainer.appendChild(card);
             card.addEventListener("click", () => {
                 document.querySelectorAll(".char-card").forEach(c => c.classList.remove("selected")); card.classList.add("selected");
-                chosenCharacter = char; document.getElementById("color-body").value = char.fur;
-                document.getElementById("color-accent").value = char.accent; document.getElementById("color-shoes").value = char.shoes;
-                updateColorsFromInputs();
+                chosenCharacter = char; player.img.src = char.sprite;
             });
         });
+        player.img.src = ROSTER[0].sprite;
         document.querySelectorAll(".btn-diff").forEach(btn => {
             btn.addEventListener("click", () => {
                 document.querySelectorAll(".btn-diff").forEach(b => b.classList.remove("selected")); btn.classList.add("selected");
@@ -176,23 +154,12 @@
                 }
             });
         });
-        function updateColorsFromInputs() {
-            customColors.fur = document.getElementById("color-body").value;
-            customColors.accent = document.getElementById("color-accent").value;
-            customColors.shoes = document.getElementById("color-shoes").value;
-        }
-        document.getElementById("color-body").addEventListener("input", updateColorsFromInputs);
-        document.getElementById("color-accent").addEventListener("input", updateColorsFromInputs);
-        document.getElementById("color-shoes").addEventListener("input", updateColorsFromInputs);
-        document.getElementById("btn-mute").addEventListener("click", () => {
-            audioMuted = !audioMuted; document.getElementById("btn-mute").textContent = audioMuted ? "🔈" : "🔊";
-        });
-        document.getElementById("btn-restart").addEventListener("click", () => {
-            resetLevelState(); appState = "play"; document.getElementById("menu-screen").classList.add("hidden"); document.getElementById("hud-layer").classList.remove("hidden");
-        });
+        function updateColorsFromInputs() {}
+        document.getElementById("btn-mute").addEventListener("click", () => { audioMuted = !audioMuted; });
+        document.getElementById("btn-restart").addEventListener("click", () => { resetLevelState(); appState = "play"; });
         document.getElementById("btn-story-trigger").addEventListener("click", () => { triggerCinematicDialogue(chosenCharacter.name, chosenCharacter.line, false); });
         document.getElementById("btn-play").addEventListener("click", () => {
-            updateColorsFromInputs(); resetLevelState(); appState = "play";
+            resetLevelState(); appState = "play";
             document.getElementById("menu-screen").classList.add("hidden"); document.getElementById("hud-layer").classList.remove("hidden");
             if (chosenCharacter.id === "tails") { triggerCinematicDialogue("Tails", "I'm not dead! Let's complete the dynamic mission!", false); }
         });
@@ -204,8 +171,8 @@
             if (currentDifficulty === "scary") { diagOverlay.classList.add("scary-dialogue"); diagText.className = "dialogue-text shake-heavy"; }
             else if (currentDifficulty === "quiz") { diagOverlay.classList.add("fools-dialogue"); diagText.className = "dialogue-text pulse-text"; }
             else { diagText.className = "dialogue-text"; }
-            diagSpeaker.textContent = speaker; diagText.textContent = text; portrait.style.backgroundColor = customColors.fur;
-            playBeep(220, "triangle", 0.2); setTimeout(() => playBeep(330, "triangle", 0.1), 60);
+            diagSpeaker.textContent = speaker; diagText.textContent = text; portrait.style.backgroundImage = `url('${chosenCharacter.sprite}')`;
+            playBeep(220, "triangle", 0.2);
             if (isQuizInstance) {
                 quizBox.classList.remove("hidden"); const currentQuiz = FACTS_QUIZ[currentQuizIndex];
                 currentQuiz.a.forEach((ans, idx) => {
@@ -217,13 +184,8 @@
         function closeDialogueLayer() { appState = "play"; document.getElementById("dialogue-overlay").classList.add("hidden"); }
         function handleQuizAnswer(selectedIdx) {
             const currentQuiz = FACTS_QUIZ[currentQuizIndex];
-            if (selectedIdx === currentQuiz.c) {
-                rings += 10; score += 500; targetSpeed = 16; playBeep(880, "sine", 0.15);
-                triggerCinematicDialogue("SYSTEM INFO", "CORRECT! High speed boost activated!", false);
-            } else {
-                gravityDirection *= -1; targetSpeed = 4; playBeep(140, "sawtooth", 0.35);
-                triggerCinematicDialogue("APRIL FOOLS GAG", "WRONG! Gravity fields completely inverted!", false);
-            }
+            if (selectedIdx === currentQuiz.c) { rings += 10; score += 500; targetSpeed = 16; playBeep(880, "sine", 0.15); closeDialogueLayer(); } 
+            else { gravityDirection *= -1; targetSpeed = 4; playBeep(140, "sawtooth", 0.35); closeDialogueLayer(); }
             currentQuizIndex = (currentQuizIndex + 1) % FACTS_QUIZ.length;
         }
         document.querySelectorAll(".btn-ability").forEach(btn => {
@@ -238,21 +200,14 @@
         function triggerPlayerJump() {
             if (!player.isJumping || player.form === "hyper") {
                 player.vy = -12.5 * gravityDirection; player.isJumping = true; playBeep(440, "sine", 0.08);
-                for(let i=0; i<6; i++) {
-                    particlesArray.push({ x: player.x, y: player.y, vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4, color: customColors.accent, radius: 3, alpha: 1 });
-                }
             }
         }
         function executeAbilitySlot(index) {
-            playBeep(500 + (index * 70), "square", 0.12);
             if (index === 0) { targetSpeed = 22; score += 50; }
             else if (index === 1) { player.vy = -8.5 * gravityDirection; player.flightTicks = 60; }
-            else if (index === 2) { debrisArray.push({ x: player.x + 20, y: player.y + 16, vx: 12, vy: 0, radius: 8, color: customColors.accent }); }
+            else if (index === 2) { debrisArray.push({ x: player.x + 20, y: player.y + 16, vx: 12, vy: 0, radius: 8, color: "#fff" }); }
             else if (index === 3) { player.form = "shield"; setTimeout(() => { if(player.form === "shield") player.form = "normal"; }, 3000); }
-            else if (index === 4) {
-                player.form = player.form === "hyper" ? "normal" : "hyper"; targetSpeed = player.form === "hyper" ? 28 : 8;
-                triggerCinematicDialogue(chosenCharacter.name, `UNLEASHING MOVIE POWER: ${chosenCharacter.line}`, false);
-            }
+            else if (index === 4) { player.form = player.form === "hyper" ? "normal" : "hyper"; targetSpeed = player.form === "hyper" ? 28 : 8; }
         }
         function resetLevelState() {
             score = 0; rings = 0; runningDistance = 0; globalGameSpeed = 6; targetSpeed = 8; gravityDirection = 1; currentQuizIndex = 0;
@@ -262,7 +217,7 @@
                 trackRings.push({ x: 500 + (i * 140), y: 240 + (Math.sin(i) * 35), active: true });
                 if (i % 2 === 0) { trackObstacles.push({ x: 700 + (i * 220), y: 316, width: 24, height: 24 }); }
             }
-            particlesArray = []; debrisArray = []; closeDialogueLayer();
+            debrisArray = []; closeDialogueLayer();
         }
         function updateEngineFrame() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -272,22 +227,6 @@
                 if (currentDifficulty === "quiz" && Math.floor(runningDistance) % 500 === 0 && Math.floor(runningDistance) > 0 && appState === "play") {
                     triggerCinematicDialogue("QUIZ STATION", FACTS_QUIZ[currentQuizIndex].q, true);
                 }
-            }
-            renderWorldBackdrop(); processPlayerPhysics(); renderPlayerSprite(); renderBossSystem();
-            requestAnimationFrame(updateEngineFrame);
-        }
-        function renderWorldBackdrop() {
-            let skyGrad = ctx.createLinearGradient(0,0,0, canvas.height);
-            if (currentDifficulty === "scary") { skyGrad.addColorStop(0, "#1a0000"); skyGrad.addColorStop(1, "#000000"); }
-            else { skyGrad.addColorStop(0, "#0c4a6e"); skyGrad.addColorStop(1, "#0284c7"); }
-            ctx.fillStyle = skyGrad; ctx.fillRect(0,0, canvas.width, canvas.height);
-            ctx.fillStyle = currentDifficulty === "scary" ? "#3f0000" : "#b45309"; ctx.fillRect(0, 340, canvas.width, 140);
-            ctx.fillStyle = currentDifficulty === "scary" ? "#110000" : "#15803d"; ctx.fillRect(0, 340, canvas.width, 16);
-            ctx.strokeStyle = "rgba(255,255,255,0.06)"; ctx.lineWidth = 2;
-            for (let i = terrainOffset % 40; i < canvas.width; i += 40) { ctx.beginPath(); ctx.moveTo(i, 340); ctx.lineTo(i, canvas.height); ctx.stroke(); }
-        }
-        function processPlayerPhysics() {
-            if (appState === "play") {
                 if (player.form === "hyper") {
                     if (window.keys && (window.keys['ArrowUp'] || window.keys[' '])) { player.vy = -4 * gravityDirection; }
                     else { player.vy += 0.1 * gravityDirection; player.vy *= 0.9; }
@@ -296,83 +235,38 @@
                 player.y += player.vy;
                 if (gravityDirection === 1 && player.y >= 292) { player.y = 292; player.vy = 0; player.isJumping = false; }
                 else if (gravityDirection === -1 && player.y <= 60) { player.y = 60; player.vy = 0; player.isJumping = false; }
-                if (Math.random() < 0.5) {
-                    particlesArray.push({ x: player.x - 8, y: player.y + 12 + (Math.random()*24), vx: -globalGameSpeed * 0.3, vy: (Math.random()-0.5)*2, color: player.form === "hyper" ? `hsl(${Date.now() % 360}, 100%, 70%)` : customColors.fur, radius: player.form === "hyper" ? 5 : 3, alpha: 1 });
-                }
             }
-            for (let i = particlesArray.length - 1; i >= 0; i--) {
-                let p = particlesArray[i]; if (appState === "play") { p.x += p.vx; p.y += p.vy; p.alpha -= 0.025; }
-                if (p.alpha <= 0) { particlesArray.splice(i, 1); continue; }
-                ctx.save(); ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+            let skyGrad = ctx.createLinearGradient(0,0,0, canvas.height);
+            if (currentDifficulty === "scary") { skyGrad.addColorStop(0, "#1a0000"); skyGrad.addColorStop(1, "#000000"); }
+            else { skyGrad.addColorStop(0, "#0c4a6e"); skyGrad.addColorStop(1, "#0284c7"); }
+            ctx.fillStyle = skyGrad; ctx.fillRect(0,0, canvas.width, canvas.height);
+            ctx.fillStyle = currentDifficulty === "scary" ? "#3f0000" : "#b45309"; ctx.fillRect(0, 340, canvas.width, 140);
+            ctx.fillStyle = currentDifficulty === "scary" ? "#110000" : "#15803d"; ctx.fillRect(0, 340, canvas.width, 16);
+            if (currentDifficulty !== "scary") {
+                ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
+            } else {
+                ctx.save(); ctx.globalAlpha = 0.9; ctx.fillStyle = "#000"; ctx.fillRect(player.x, player.y, player.width, player.height); ctx.restore();
             }
-        }
-        function renderPlayerSprite() {
-            ctx.save();
-            ctx.fillStyle = "rgba(0,0,0,0.3)";
-            ctx.beginPath(); ctx.ellipse(player.x + 16, gravityDirection === 1 ? 342 : 56, 16, 5, 0, 0, Math.PI*2); ctx.fill();
-            if (player.form === "hyper") { ctx.shadowBlur = 20; ctx.shadowColor = `hsl(${Date.now() % 360}, 100%, 60%)`; }
-            ctx.fillStyle = currentDifficulty === "scary" ? "#000000" : customColors.fur;
-            ctx.fillRect(player.x, player.y + 10, player.width, player.height - 18);
-            ctx.beginPath();
-            ctx.moveTo(player.x, player.y + 12);
-            ctx.lineTo(player.x - 12, player.y + 18);
-            ctx.lineTo(player.x, player.y + 24);
-            ctx.moveTo(player.x, player.y + 22);
-ctx.lineTo(player.x - 10, player.y + 30);
-ctx.lineTo(player.x, player.y + 36);
-ctx.fill();
-ctx.fillStyle = currentDifficulty === "scary" ? "#000000" : customColors.accent;
-ctx.fillRect(player.x + 4, player.y + 16, 18, 18);
-ctx.fillStyle = currentDifficulty === "scary" ? "#ff0000" : customColors.shoes;
-ctx.fillRect(player.x - 4, player.y + (gravityDirection === 1 ? 40 : -2), 38, 10);
-ctx.fillStyle = "#ffffff";
-ctx.fillRect(player.x + 8, player.y + (gravityDirection === 1 ? 40 : -2), 8, 10);
-ctx.fillStyle = currentDifficulty === "scary" ? "#ff0000" : "#059669";
-ctx.fillRect(player.x + 22, player.y + 4, 6, 10);
-ctx.fillStyle = "#000000";
-ctx.fillRect(player.x + 25, player.y + 6, 3, 6);
-ctx.restore();
+            if (player.form === "shield") { ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(player.x + 22, player.y + 24, 32, 0, Math.PI*2); ctx.stroke(); }
+            boss.floatOffset += 0.05; let currentBossY = boss.y + (Math.sin(boss.floatOffset) * 12);
+            ctx.drawImage(boss.img, 640, currentBossY, 70, 70);
+            trackRings.forEach(r => {
+                if (appState === "play") r.x -= globalGameSpeed; if (r.x < -20) { r.x = canvas.width + 200; r.active = true; }
+if (r.active && Math.abs(player.x - r.x) < 30 && Math.abs(player.y - r.y) < 40) { r.active = false; rings++; score += 100; playBeep(587, "sine", 0.08); }
+if (r.active) { ctx.fillStyle = "#eab308"; ctx.beginPath(); ctx.arc(r.x, r.y, 8, 0, Math.PI2); ctx.fill(); }
+});
+trackObstacles.forEach(o => {
+if (appState === "play") o.x -= globalGameSpeed; if (o.x < -50) o.x = canvas.width + 400;
+if (Math.abs(player.x - o.x) < 24 && Math.abs(player.y - o.y) < 36) { o.x = canvas.width + 500; if (player.form !== "shield" && player.form !== "hyper") rings = Math.max(0, rings - 5); }
+ctx.fillStyle = "#475569"; ctx.fillRect(o.x, o.y, 24, 24);
+});
+debrisArray.forEach((d, i) => {
+d.x += d.vx; ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(d.x, d.y, 6, 0, Math.PI2); ctx.fill();
+if (d.x > 620 && Math.abs(d.y - currentBossY - 35) < 40) { boss.hp -= 10; score += 1000; debrisArray.splice(i, 1); }
+});
+document.getElementById("hud-rings").textContent = rings; document.getElementById("hud-score").textContent = score;
+document.getElementById("hud-speed").textContent = ${Math.floor(globalGameSpeed * 5)} mph;
+requestAnimationFrame(updateEngineFrame);
 }
-function renderBossSystem() {
-boss.floatOffset += 0.05; let currentBossY = boss.y + (Math.sin(boss.floatOffset) * 12);
-if (appState === "play") { boss.x = 640 + (Math.sin(boss.floatOffset) * 8); }
-ctx.save(); ctx.fillStyle = currentDifficulty === "scary" ? "#1a0505" : "#dc2626"; ctx.beginPath(); ctx.arc(boss.x, currentBossY, 34, 0, Math.PI2); ctx.fill();
-ctx.fillStyle = "#eab308"; ctx.fillRect(boss.x - 18, currentBossY + 4, 8, 8); ctx.fillRect(boss.x + 10, currentBossY + 4, 8, 8);
-ctx.fillStyle = "#475569"; ctx.fillRect(boss.x - 40, currentBossY - 50, 80, 6); ctx.fillStyle = "#ef4444"; ctx.fillRect(boss.x - 40, currentBossY - 50, (boss.hp / boss.maxHp) * 80, 6); ctx.restore();
-processTrackElements(currentBossY);
-}
-function processTrackElements(bossY) {
-for (let i = trackRings.length - 1; i >= 0; i--) {
-let r = trackRings[i];
-if (appState === "play") {
-r.x -= globalGameSpeed; if (r.x < -20) { r.x = canvas.width + Math.random() * 300; r.y = 200 + Math.random() * 100; r.active = true; }
-if (r.active && Math.abs(player.x - r.x) < 28 && Math.abs(player.y - r.y) < 36) { r.active = false; rings++; score += 100; playBeep(587, "sine", 0.08); }
-}
-if (r.active) { ctx.fillStyle = "#eab308"; ctx.beginPath(); ctx.arc(r.x, r.y, 8, 0, Math.PI2); ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.stroke(); }
-}
-for (let i = trackObstacles.length - 1; i >= 0; i--) {
-let o = trackObstacles[i];
-if (appState === "play") {
-o.x -= globalGameSpeed; if (o.x < -50) { o.x = canvas.width + Math.random() * 400; }
-if (Math.abs(player.x - o.x) < 24 && Math.abs(player.y - o.y) < 36) {
-if (player.form === "shield" || player.form === "hyper") { o.x = canvas.width + Math.random() * 500; score += 200; playBeep(300, "sawtooth", 0.12); }
-else { rings = Math.max(0, rings - 5); o.x = canvas.width + Math.random() * 500; playBeep(180, "triangle", 0.2); }
-}
-}
-ctx.fillStyle = currentDifficulty === "scary" ? "#4c0519" : "#475569"; ctx.fillRect(o.x, o.y, 24, 24);
-}
-for (let i = debrisArray.length - 1; i >= 0; i--) {
-let d = debrisArray[i]; d.x += d.vx;
-ctx.fillStyle = d.color; ctx.beginPath(); ctx.arc(d.x, d.y, d.radius, 0, Math.PI*2); ctx.fill();
-if (Math.abs(d.x - boss.x) < 40 && Math.abs(d.y - bossY) < 40) {
-boss.hp = Math.max(0, boss.hp - 10); score += 1000; playBeep(700, "square", 0.08); debrisArray.splice(i, 1);
-if (boss.hp <= 0) { boss.hp = boss.maxHp; score += 5000; triggerCinematicDialogue("VICTORY DECREE", "Boss defeated successfully!", false); }
-continue;
-}
-if (d.x > canvas.width + 50) { debrisArray.splice(i, 1); }
-}
-}
-window.keys = {};
-window.addEventListener('keydown', (e) => { window.keys[e.key] = true; });
-window.addEventListener('keyup', (e) => { window.keys[e.key] = false; });
+window.keys = {}; window.addEventListener('keydown', (e) => { window.keys[e.key] = true; }); window.addEventListener('keyup', (e) => { window.keys[e.key] = false; });
 updateEngineFrame();
