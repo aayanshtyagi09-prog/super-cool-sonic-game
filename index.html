@@ -1,362 +1,213 @@
 from pathlib import Path
 
-game = r'''<!doctype html>
-<html lang="en">
+html = """<!doctype html>
+<html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sonic & Cartoon Heroes — Ultimate Chaos World</title>
+<title>Sonic & Cartoon Heroes — Infinite Speed</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07101d;color:#fff;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}
-canvas{display:block;width:100%;height:100%}
+html,body{margin:0;height:100%;overflow:hidden;background:#050914;color:white;font-family:Arial,sans-serif}
+canvas{width:100%;height:100%;display:block}
 #ui{position:fixed;inset:0;pointer-events:none}
-.panel{background:rgba(3,8,17,.70);border:1px solid rgba(255,255,255,.14);border-radius:16px;box-shadow:0 12px 45px rgba(0,0,0,.28);backdrop-filter:blur(10px)}
-#top{position:absolute;left:14px;right:14px;top:14px;display:flex;gap:10px;align-items:flex-start}
-#stats{padding:11px 13px;min-width:310px}
-#gameTitle{font-size:15px;font-weight:900;letter-spacing:.3px}
-#statsText{margin-top:5px;font-size:12px;line-height:1.45}
-#roster{padding:8px;display:flex;flex-wrap:wrap;gap:6px;max-width:calc(100vw - 350px)}
-.card{padding:7px 8px;border-radius:11px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);font-size:11px;white-space:nowrap}
-.card.active{background:#fff;color:#06111b;font-weight:900}
-#mission{position:absolute;left:14px;bottom:14px;padding:9px 12px;font-size:12px}
-#center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:none;text-align:center;padding:25px 30px;min-width:340px}
-#center h1{font-size:42px;line-height:1;margin:0 0 10px;font-weight:1000}
-#center p{margin:0;opacity:.88}
-#bossbar{position:absolute;left:20%;right:20%;bottom:20px;height:18px;border-radius:99px;padding:3px;display:none}
-#bossfill{height:100%;border-radius:99px;background:#fff}
-#mobile{display:none;position:absolute;inset:auto 12px 12px 12px;justify-content:space-between;gap:10px}
-.group{display:flex;gap:8px}
-.btn{pointer-events:auto;border:1px solid rgba(255,255,255,.16);border-radius:15px;background:rgba(2,8,17,.78);color:#fff;padding:13px 16px;font-size:17px;font-weight:900}
-@media(max-width:900px),(pointer:coarse){#mobile{display:flex}#roster{max-width:50vw}.card{font-size:9px;padding:6px}.panel{backdrop-filter:blur(5px)}}
+.panel{background:rgba(2,7,15,.72);border:1px solid rgba(255,255,255,.16);border-radius:15px;
+padding:10px 12px;backdrop-filter:blur(8px);box-shadow:0 10px 35px rgba(0,0,0,.3)}
+#top{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:9px}
+#stats{min-width:325px;font-size:12px;line-height:1.45}
+#title{font-size:15px;font-weight:900}
+#roster{display:flex;flex-wrap:wrap;gap:5px;max-width:calc(100vw - 350px)}
+.hero{font-size:10px;padding:6px 8px;border-radius:9px;background:rgba(255,255,255,.07)}
+.hero.active{background:#fff;color:#06101a;font-weight:900}
+#mission{position:absolute;left:12px;bottom:12px;font-size:12px}
+#speed{position:absolute;right:12px;bottom:12px;text-align:right}
+#bigSpeed{font-size:26px;font-weight:1000}
+#center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:none;min-width:360px;text-align:center}
+#center h1{font-size:40px;margin:0 0 8px}
+#boss{position:absolute;left:18%;right:18%;bottom:48px;height:20px;padding:4px;display:none}
+#bossFill{height:100%;background:#ff4ed7;border-radius:99px}
+#mobile{display:none;position:absolute;left:10px;right:10px;bottom:10px;justify-content:space-between}
+.btn{pointer-events:auto;background:rgba(2,7,15,.82);border:1px solid rgba(255,255,255,.15);color:white;border-radius:14px;padding:12px 14px;font-weight:900}
+.group{display:flex;gap:7px}
+@media(max-width:900px),(pointer:coarse){#mobile{display:flex}#roster{max-width:48vw}.hero{font-size:9px}}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="ui">
-  <div id="top">
-    <div id="stats" class="panel">
-      <div id="gameTitle">SONIC & CARTOON HEROES — ULTIMATE CHAOS WORLD</div>
-      <div id="statsText">Loading...</div>
-    </div>
-    <div id="roster" class="panel"></div>
-  </div>
-  <div id="mission" class="panel"></div>
-  <div id="center" class="panel"><h1 id="centerTitle"></h1><p id="centerText"></p></div>
-  <div id="bossbar" class="panel"><div id="bossfill"></div></div>
-  <div id="mobile">
-    <div class="group">
-      <button class="btn" data-k="left">◀</button>
-      <button class="btn" data-k="right">▶</button>
-    </div>
-    <div class="group">
-      <button class="btn" data-k="jump">JUMP</button>
-      <button class="btn" data-k="boost">BOOST</button>
-      <button class="btn" data-k="special">POWER</button>
-      <button class="btn" data-k="switch">SWITCH</button>
-    </div>
-  </div>
+<div id="top">
+<div id="stats" class="panel"><div id="title">SONIC & CARTOON HEROES — INFINITE SPEED</div><div id="statsText"></div></div>
+<div id="roster" class="panel"></div>
+</div>
+<div id="mission" class="panel"></div>
+<div id="speed" class="panel">SPEED<br><span id="bigSpeed">∞</span><br><small>INFINITE MODE</small></div>
+<div id="boss" class="panel"><div id="bossFill"></div></div>
+<div id="center" class="panel"><h1 id="ct"></h1><div id="cp"></div></div>
+<div id="mobile">
+<div class="group"><button class="btn" data-k="left">◀</button><button class="btn" data-k="right">▶</button></div>
+<div class="group"><button class="btn" data-k="jump">JUMP</button><button class="btn" data-k="boost">BOOST</button><button class="btn" data-k="power">POWER</button><button class="btn" data-k="switch">SWITCH</button></div>
+</div>
 </div>
 <script>
-"use strict";
 const canvas=document.getElementById("c"),ctx=canvas.getContext("2d");
-let W=innerWidth,H=innerHeight,dpr=Math.max(1,Math.min(2,devicePixelRatio||1));
-function resize(){W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
-addEventListener("resize",resize);resize();
+let W=innerWidth,H=innerHeight,dpr=Math.min(2,devicePixelRatio||1);
+function resize(){W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)} addEventListener("resize",resize);resize();
 
-const rosterEl=document.getElementById("roster"), statsEl=document.getElementById("statsText");
-const missionEl=document.getElementById("mission"), center=document.getElementById("center");
-const centerTitle=document.getElementById("centerTitle"),centerText=document.getElementById("centerText");
-const bossbar=document.getElementById("bossbar"),bossfill=document.getElementById("bossfill");
 const keys={};
-addEventListener("keydown",e=>{
-  const k=e.key.toLowerCase(); keys[k]=true;
-  if([" ","arrowleft","arrowright","shift"].includes(k))e.preventDefault();
-  if(k==="q")changeHero(1);
-  if(k==="r")restart();
-  if(k==="e"){special();keys[k]=false}
-  if(k==="1")selectHero(0);if(k==="2")selectHero(1);if(k==="3")selectHero(2);if(k==="4")selectHero(3);if(k==="5")selectHero(4);
-});
-addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+addEventListener("keydown",e=>{const k=e.key.toLowerCase();keys[k]=1;if([" ","arrowleft","arrowright","shift"].includes(k))e.preventDefault();
+if(k==="q")switchHero();if(k==="e"){power();keys.e=0}if(k==="r")reset()});
+addEventListener("keyup",e=>keys[e.key.toLowerCase()]=0);
 document.querySelectorAll(".btn").forEach(b=>{
-  const k=b.dataset.k;
-  const set=(v)=>(ev)=>{ev.preventDefault(); if(k==="switch"&&v)changeHero(1); else keys[k]=v};
-  b.addEventListener("pointerdown",set(true)); b.addEventListener("pointerup",set(false));
-  b.addEventListener("pointercancel",set(false)); b.addEventListener("pointerleave",set(false));
+ const k=b.dataset.k;
+ const down=e=>{e.preventDefault();if(k==="switch"){switchHero();return}keys[k]=1};
+ const up=e=>{e.preventDefault();keys[k]=0};
+ b.addEventListener("pointerdown",down);b.addEventListener("pointerup",up);b.addEventListener("pointercancel",up);b.addEventListener("pointerleave",up)
 });
 
 const HEROES=[
-{name:"Sonic",short:"SONIC",base:"#1976ff",speed:1.00,jump:1.10,ability:"Homing Attack",power:"Chaos Burst",specialText:"Spin Dash + Homing Attack"},
-{name:"Tails",short:"TAILS",base:"#f3a51f",speed:.78,jump:1.22,ability:"Flight",power:"Twin Shot",specialText:"Short air flight"},
-{name:"Knuckles",short:"KNUCKLES",base:"#e53935",speed:.75,jump:1.02,ability:"Glide & Climb",power:"Ground Quake",specialText:"Power punch / quake"},
-{name:"Amy",short:"AMY",base:"#f58aa4",speed:.72,jump:1.08,ability:"Hammer Strike",power:"Rose Smash",specialText:"Large hammer arc"},
-{name:"Shadow",short:"SHADOW",base:"#111827",speed:1.05,jump:1.12,ability:"Chaos Control",power:"Chaos Spear",specialText:"Teleport-like burst"},
-{name:"Goku",short:"GOKU",base:"#e88928",speed:.68,jump:1.38,ability:"Air Jump",power:"Kame Burst",specialText:"Long-range energy wave"},
-{name:"Naruto",short:"NARUTO",base:"#ff8b1a",speed:.82,jump:1.16,ability:"Wall Leap",power:"Rasengan",specialText:"Spinning energy hit"},
-{name:"Ben 10",short:"BEN",base:"#3fc54d",speed:.74,jump:1.08,ability:"Alien Shift",power:"Omni Blast",specialText:"Damage-resistant dash"},
-{name:"SpongeBob",short:"SPONGEBOB",base:"#ffd83d",speed:.58,jump:1.05,ability:"Bubble Float",power:"Bubble Barrage",specialText:"Rapid bubbles"},
-{name:"Bugs Bunny",short:"BUGS",base:"#8f969e",speed:.64,jump:1.04,ability:"Acme Trick",power:"Carrot Boomerang",specialText:"Returning projectile"},
-{name:"Mickey",short:"MICKEY",base:"#111",speed:.60,jump:1.05,ability:"Magic Hop",power:"Magic Spark",specialText:"Chain magic"},
-{name:"Samurai Jack",short:"JACK",base:"#c7a35a",speed:.70,jump:1.10,ability:"Sword Dash",power:"Energy Slash",specialText:"Wide cutting wave"}
+["Sonic","99999","#1681ff","Homing Attack","Chaos Burst"],
+["Super Sonic","99999","#ffe04a","Flight","Super Nova"],
+["Hyper Sonic","99999","#ffffff","Hyper Flash","Hyper Flash"],
+["Tails","700","#f0a129","Flight","Twin Shot"],
+["Knuckles","620","#e63a3d","Glide","Emerald Quake"],
+["Amy","560","#f18baa","Hammer Dash","Piko Smash"],
+["Shadow","99999","#15191f","Chaos Control","Chaos Spear"],
+["Goku","900","#e9912f","Ki Flight","Kamehameha"],
+["Naruto","760","#ff8d1b","Wall Leap","Rasengan"],
+["Ben 10","700","#47c956","Alien Shift","Alien X Burst"],
+["SpongeBob","450","#ffdb3e","Bubble Bounce","Bubble Barrage"],
+["Bugs Bunny","470","#9aa0a6","Trick Dash","Carrot Boomerang"],
+["Mickey","440","#181818","Magic Hop","Magic Storm"],
+["Samurai Jack","580","#d0ad67","Sword Dash","Sword Wave"],
+["Aang","650","#bb996f","Air Glide","Avatar Cyclone"],
+["Finn","520","#bfa984","Hero Dash","Finn Strike"],
+["Jake","500","#f1d54c","Stretch Leap","Stretch Smash"],
+["Danny Phantom","720","#f2f3f5","Ghost Phase","Ghost Blast"]
 ];
 let hero=0;
-function selectHero(i){if(i>=0&&i<HEROES.length){hero=i;updateRoster();}}
-function changeHero(d){hero=(hero+d+HEROES.length)%HEROES.length;updateRoster();burst(player.x,player.y,18,1.2)}
-function updateRoster(){rosterEl.innerHTML=HEROES.map((h,i)=>`<div class="card ${i===hero?"active":""}">${i+1} ${h.short}</div>`).join("")}
+function updateRoster(){document.getElementById("roster").innerHTML=HEROES.map((h,i)=>`<div class="hero ${i===hero?"active":""}">${i+1} ${h[0]}</div>`).join("")}
+function switchHero(){hero=(hero+1)%HEROES.length;burst(player.x,player.y,28,1.3,"switch");updateRoster()}
 
-const world={w:24000,waterH:.70};
-let player,coins,enemies,platforms,boostPads,particles,cam,score,rings,combo,comboTime,time,checkpoint,win,mission,zone,boss;
-function ground(){return H*world.waterH}
-function resetWorld(){
-  player={x:280,y:ground()-60,vx:0,vy:0,r:27,onGround:false,jumps:0,boost:100,health:100,inv:0,fly:0};
-  coins=[];enemies=[];platforms=[];boostPads=[];particles=[];cam=0;score=0;rings=0;combo=0;comboTime=0;time=0;checkpoint=280;win=false;zone=0;boss=null;
-  for(let i=0;i<150;i++){
-    const x=520+i*145+Math.random()*95;
-    const y=ground()-90-Math.random()*220;
-    coins.push({x,y,got:false,r:10,spin:Math.random()*6});
-  }
-  for(let i=0;i<80;i++){
-    const x=750+i*260+Math.random()*160;
-    enemies.push({x,y:ground()-34,r:25,type:i%4,alive:true,phase:Math.random()*10,hp:1});
-  }
-  for(let i=0;i<26;i++){
-    const x=850+i*800+Math.random()*200;
-    const y=ground()-210-Math.random()*120;
-    platforms.push({x,y,w:180+Math.random()*160,h:18});
-  }
-  for(let i=0;i<22;i++) boostPads.push({x:600+i*950,y:ground()-18});
-  boss={x:world.w-1100,y:ground()-70,r:58,hp:45,max:45,alive:true,phase:0};
-  enemies.push(boss);
-  mission={type:"rings",need:35,done:false};
-  updateRoster(); hideCenter();
-}
-function hideCenter(){center.style.display="none"}
-function showCenter(a,b){centerTitle.textContent=a;centerText.textContent=b;center.style.display="block"}
+let player,rings,enemies,particles,cam,score,ringCount,combo,time,boss,won;
 
-function burst(x,y,n,scale=1,kind="spark"){
-  for(let i=0;i<n;i++) particles.push({x,y,vx:(Math.random()-.5)*11*scale,vy:(Math.random()-.5)*11*scale,life:.5+Math.random()*.9,r:2+Math.random()*6,kind});
+function ground(){return H*.70}
+function reset(){
+ player={x:250,y:ground()-60,vx:0,vy:0,r:28,onGround:false,jumps:0,boost:100,hp:100,inv:0,trail:[],fly:0};
+ rings=[];enemies=[];particles=[];cam=0;score=0;ringCount=0;combo=0;time=0;won=false;
+ const worldW=36000;
+ for(let i=0;i<260;i++) rings.push({x:500+i*130+Math.random()*90,y:ground()-90-Math.random()*240,r:10,got:false,a:Math.random()*6});
+ for(let i=0;i<95;i++) enemies.push({x:900+i*330+Math.random()*160,y:ground()-35,r:27,hp:1,alive:true,a:Math.random()*9});
+ boss={x:worldW-1050,y:ground()-80,r:70,hp:100,max:100,alive:true,b:true,a:0};enemies.push(boss);
+ updateRoster();show(false);
 }
-function fireProjectile(kind){
-  const dir=Math.sign(player.vx||1);
-  particles.push({x:player.x+dir*28,y:player.y-7,vx:14*dir,vy:0,life:1.25,r:8,kind});
+function burst(x,y,n,s,k){for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-.5)*13*s,vy:(Math.random()-.5)*13*s,life:.45+Math.random(),r:2+Math.random()*7,k})}
+let lastPower=-9;
+function fire(k){let d=Math.sign(player.vx||1);particles.push({x:player.x+d*34,y:player.y-5,vx:18*d,vy:(Math.random()-.5)*2,life:1.4,r:8,k})}
+function power(){
+ if(time-lastPower<.45||won)return;lastPower=time;
+ if(hero===0){player.vx=1000;player.inv=.5;burst(player.x,player.y,45,2,"blue")}
+ else if(hero===1){player.vx=1000;player.vy=-10;player.inv=1;burst(player.x,player.y,70,2.5,"gold")}
+ else if(hero===2){player.vx=1000;player.vy=-14;player.inv=1.3;burst(player.x,player.y,100,3,"hyper")}
+ else if(hero===3){player.fly=2.5;for(let i=0;i<4;i++)fire("gold")}
+ else if(hero===4){burst(player.x,ground()-5,60,2,"red");enemies.forEach(e=>{if(e.alive&&!e.b&&Math.abs(e.x-player.x)<450)e.hp=0})}
+ else if(hero===6){player.vx=1000;player.inv=1;burst(player.x,player.y,65,2,"purple")}
+ else if(hero===7){for(let i=0;i<12;i++)fire("ki")}
+ else if(hero===8){for(let i=0;i<9;i++)fire("orange")}
+ else if(hero===9){player.inv=1.5;player.vx=700;burst(player.x,player.y,45,2,"green")}
+ else if(hero===10){for(let i=0;i<14;i++)fire("bubble")}
+ else if(hero===11){fire("carrot")}
+ else if(hero===12){for(let i=0;i<20;i++)fire("magic")}
+ else if(hero===13){for(let i=0;i<7;i++)fire("sword")}
+ else if(hero===14){player.vy=-20;player.fly=2;burst(player.x,player.y,45,2,"air")}
+ else if(hero===17){player.inv=1.3;player.vx=800;burst(player.x,player.y,55,2,"ghost")}
+ else {player.vx+=500;burst(player.x,player.y,30,1.6,"spark")}
 }
-let lastSpecial=-10;
-function special(){
-  if(win||time-lastSpecial<.55)return;
-  lastSpecial=time;
-  const h=HEROES[hero];
-  if(h.name==="Sonic"){player.vx+=Math.sign(player.vx||1)*12;player.inv=.35;burst(player.x,player.y,28,1.7,"blue")}
-  else if(h.name==="Tails"){player.fly=1.7;burst(player.x,player.y,20,1.3,"gold")}
-  else if(h.name==="Knuckles"){burst(player.x,ground()-20,35,2.0,"red"); enemies.forEach(e=>{if(e.alive&&Math.abs(e.x-player.x)<230)e.hp=0})}
-  else if(h.name==="Amy"){player.vx+=Math.sign(player.vx||1)*8;burst(player.x+35,player.y,30,1.4,"pink")}
-  else if(h.name==="Shadow"){player.vx+=Math.sign(player.vx||1)*18;player.inv=.8;burst(player.x,player.y,35,2.0,"purple")}
-  else if(h.name==="Goku"){for(let i=0;i<7;i++)fireProjectile("ki")}
-  else if(h.name==="Naruto"){for(let i=0;i<4;i++)fireProjectile("orange")}
-  else if(h.name==="Ben 10"){player.inv=1.25;player.vx+=Math.sign(player.vx||1)*12;burst(player.x,player.y,25,1.5,"green")}
-  else if(h.name==="SpongeBob"){for(let i=0;i<9;i++)particles.push({x:player.x+30,y:player.y+(i-4)*6,vx:10+Math.random()*4,vy:(i-4)*.4,life:1.1,r:7,kind:"bubble"})}
-  else if(h.name==="Bugs Bunny"){particles.push({x:player.x+30,y:player.y-5,vx:11,vy:-1,life:1.8,r:11,kind:"carrot"})}
-  else if(h.name==="Mickey"){for(let i=0;i<12;i++)particles.push({x:player.x+30,y:player.y-5,vx:7+i*.25,vy:(Math.random()-.5)*8,life:.9,r:5,kind:"magic"})}
-  else if(h.name==="Samurai Jack"){for(let i=0;i<5;i++)particles.push({x:player.x+45,y:player.y-5+i*4,vx:13,vy:(i-2)*1.2,life:.95,r:7,kind:"sword"})}
-}
-
-function collidesWithPlatform(){
-  for(const p of platforms){
-    if(player.x+player.r>p.x&&player.x-player.r<p.x+p.w &&
-       player.y+player.r>=p.y&&player.y+player.r<=p.y+p.h+18&&player.vy>=0){
-      player.y=p.y-player.r;player.vy=0;player.onGround=true;player.jumps=0;return true;
-    }
-  }
-  return false;
-}
+function collideGround(){if(player.y>=ground()-player.r){player.y=ground()-player.r;player.vy=0;player.onGround=true;player.jumps=0}}
 function update(dt){
-  if(win)return;
-  time+=dt;
-  const h=HEROES[hero];
-  const left=keys.a||keys.arrowleft||keys.left, right=keys.d||keys.arrowright||keys.right;
-  const jump=keys[" "]||keys.w||keys.arrowup||keys.jump;
-  const boosting=keys.shift||keys.boost;
-  if(left)player.vx-=1.0*h.speed;
-  if(right)player.vx+=1.15*h.speed;
-  const max=boosting?34*h.speed:22*h.speed;
-  player.vx*=Math.pow(.90,dt*60);
-  player.vx=Math.max(-18*h.speed,Math.min(max,player.vx));
-  if(boosting&&Math.abs(player.vx)>3&&player.boost>0)player.boost=Math.max(0,player.boost-34*dt);
-  else player.boost=Math.min(100,player.boost+16*dt);
-  if(jump&&!keys._jumpLock){
-    if(player.onGround||player.jumps<1){player.vy=-16*h.jump;player.onGround=false;player.jumps++;burst(player.x,player.y+20,7,.8)}
-    keys._jumpLock=true;
-  }
-  if(!jump)keys._jumpLock=false;
-  if(keys._specialLock){}
-  player.vy+=.78*dt*60;
-  if(player.fly>0){player.fly-=dt;player.vy*=.88;if(jump)player.vy=-3}
-  player.y+=player.vy*dt*4;
-  player.x+=player.vx*dt*4;
-  player.onGround=false;
-  collidesWithPlatform();
-  if(player.y>=ground()-player.r){player.y=ground()-player.r;player.vy=0;player.onGround=true;player.jumps=0}
-  player.x=Math.max(20,Math.min(world.w-60,player.x));
-  player.inv=Math.max(0,player.inv-dt);
-  boostPads.forEach(pad=>{if(Math.abs(player.x-pad.x)<36&&Math.abs(player.y-pad.y)<30){player.vx=Math.max(player.vx,28);burst(pad.x,pad.y,5,1,"boost")}});
-  coins.forEach(r=>{r.spin+=dt*7;if(!r.got&&Math.hypot(player.x-r.x,player.y-r.y)<player.r+r.r+7){r.got=true;rings++;score+=15;burst(r.x,r.y,5,.6,"ring")}});
-  enemies.forEach(e=>{
-    if(!e.alive)return;
-    e.phase+=dt*(1.5+e.type*.3);
-    if(!e.boss)e.x+=Math.sin(e.phase)*.5;
-    if(e.boss){e.x+=Math.sin(e.phase)*.55; if(Math.abs(player.x-e.x)<620&&Math.random()<dt*.8)particles.push({x:e.x-80,y:e.y-20,vx:-12,vy:(Math.random()-.5)*2,life:1.2,r:9,kind:"bossbolt"})}
-    // hero projectiles use particles; enemy collision handled below
-    const d=Math.hypot(player.x-e.x,player.y-e.y);
-    if(d<player.r+e.r){
-      if(e.boss){
-        if(Math.abs(player.vx)>10||hero===4||hero===5){e.hp-=1;score+=120;player.vy=-12;player.inv=.25;burst(e.x,e.y,25,1.3,e.boss?"boss":"spark")}
-        else if(player.inv<=0){player.health-=18;player.inv=1.0;player.vx=-player.vx*.7;burst(player.x,player.y,20,.9,"hit")}
-        if(e.hp<=0){e.alive=false;score+=10000;burst(e.x,e.y,90,3,"bossdeath")}
-      }else{
-        if(Math.abs(player.vx)>8||hero!==0){e.alive=false;score+=250;combo++;comboTime=2.5;burst(e.x,e.y,24,1.2,"enemy");player.vy=-10}
-        else if(player.inv<=0){player.health-=10;player.inv=1.0;player.vx=-player.vx*.65}
-      }
-    }
-  });
-  particles.forEach(q=>{
-    q.x+=q.vx*dt*4;q.y+=q.vy*dt*4;q.life-=dt;
-    if(q.kind==="bossbolt"&&q.life>0&&player.inv<=0&&Math.hypot(player.x-q.x,player.y-q.y)<player.r+q.r){
-      player.health-=14;player.inv=.9;q.life=0;burst(player.x,player.y,15,.7,"hit")
-    }
-    if(["ki","orange","bubble","carrot","magic","sword","shot"].includes(q.kind)){
-      enemies.forEach(e=>{
-        if(e.alive&&!e.boss&&Math.hypot(e.x-q.x,e.y-q.y)<e.r+q.r){e.alive=false;q.life=0;score+=220;combo++;comboTime=2.5;burst(e.x,e.y,14,1,"enemy")}
-      });
-      if(boss.alive&&Math.hypot(boss.x-q.x,boss.y-q.y)<boss.r+q.r){boss.hp-=2;q.life=0;score+=280;burst(boss.x,boss.y,10,1.1,"boss")}
-    }
-  });
-  particles=particles.filter(q=>q.life>0&&q.x>-100&&q.x<world.w+100);
-  if(comboTime>0)comboTime-=dt;else combo=0;
-  if(rings>=mission.need)mission.done=true;
-  if(mission.done&&player.x>world.w-1600)missionEl.textContent="FINAL OBJECTIVE: defeat the Titan Core and reach the Chaos Gate →";
-  else missionEl.textContent=`MISSION: collect ${mission.need} Rings (${Math.min(rings,mission.need)}/${mission.need})`;
-  if(boss.alive && player.x>boss.x-1000){bossbar.style.display="block";bossfill.style.width=(100*boss.hp/boss.max)+"%"}else bossbar.style.display="none";
-  if(player.health<=0){showCenter("MISSION FAILED","Press R to restart the island.");return}
-  if(!boss.alive&&player.x>world.w-180){win=true;showCenter("CHAOS WORLD CLEARED!","Score "+score.toLocaleString()+" • Rings "+rings+" • Combo "+combo+" • Press R to play again");}
-  cam=Math.max(0,Math.min(world.w-W/1.15,player.x-W*.33));
-}
-function drawBackground(){
-  const gy=ground();
-  let sky=ctx.createLinearGradient(0,0,0,gy);sky.addColorStop(0,"#62c8ff");sky.addColorStop(1,"#effcff");ctx.fillStyle=sky;ctx.fillRect(0,0,W,gy);
-  // sun
-  ctx.fillStyle="rgba(255,250,205,.75)";ctx.beginPath();ctx.arc(W*.78,H*.16,70,0,Math.PI*2);ctx.fill();
-  // layered islands
-  for(let l=0;l<3;l++){
-    const off=cam*(.10+.09*l), base=gy-(l*28+4);
-    ctx.fillStyle=["#7fae91","#5d8f70","#3f684f"][l];
-    ctx.beginPath();ctx.moveTo(0,base);
-    for(let x=-300;x<W+300;x+=250){
-      const px=x-off%250;
-      ctx.lineTo(px+70,base-95-l*18-Math.sin((x+off)/170)*18);
-      ctx.lineTo(px+170,base-8);
-    }
-    ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
-  }
-  // water
-  ctx.fillStyle="#1e7d9e";ctx.fillRect(0,gy+12,W,H-gy-12);
-  for(let x=-100-(cam%150);x<W+200;x+=150){
-    ctx.strokeStyle="rgba(255,255,255,.22)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,gy+55);ctx.quadraticCurveTo(x+38,gy+43,x+75,gy+55);ctx.stroke();
-  }
+ if(won)return;
+ time+=dt;
+ const h=HEROES[hero];
+ const l=keys.a||keys.arrowleft||keys.left,r=keys.d||keys.arrowright||keys.right,j=keys[" "]||keys.w||keys.arrowup||keys.jump,b=keys.shift||keys.boost;
+ if(l)player.vx-=4*h[1]*dt*60;if(r)player.vx+=5*h[1]*dt*60;
+ const cap=(hero<=2||hero===6)?120:Math.min(75,+h[1]/7);
+ player.vx*=Math.pow(.92,dt*60);
+ if(b&&player.boost>0){player.boost-=38*dt;player.vx+=20*h[1]*dt}else player.boost=Math.min(100,player.boost+18*dt);
+ player.vx=Math.max(-cap,Math.min(cap,player.vx));
+ if(j&&!keys._j){if(player.onGround||player.jumps<1){player.vy=-17*h[2];player.onGround=false;player.jumps++}keys._j=1;burst(player.x,player.y,7,.8,"jump")}if(!j)keys._j=0;
+ player.vy+=.82*dt*60;if(player.fly>0){player.fly-=dt;player.vy*=.86}
+ player.x+=player.vx*dt*4;player.y+=player.vy*dt*4;player.onGround=false;collideGround();
+ player.x=Math.max(20,Math.min(35940,player.x));player.inv=Math.max(0,player.inv-dt);
+ if(Math.abs(player.vx)>35){player.trail.push({x:player.x,y:player.y});if(player.trail.length>18)player.trail.shift()}
+ rings.forEach(q=>{q.a+=dt*8;if(!q.got&&Math.hypot(player.x-q.x,player.y-q.y)<player.r+q.r+16){q.got=1;ringCount++;score+=25;burst(q.x,q.y,6,.5,"ring")}});
+ enemies.forEach(e=>{
+   if(!e.alive)return;e.a+=dt*2;
+   if(e.b){e.x+=Math.sin(e.a)*.7;if(Math.random()<dt&&Math.abs(player.x-e.x)<900)particles.push({x:e.x-110,y:e.y,vx:-17,vy:(Math.random()-.5)*7,life:1.3,r:10,k:"bolt"})}
+   else e.x+=Math.sin(e.a)*.7;
+   if(Math.hypot(player.x-e.x,player.y-e.y)<player.r+e.r){
+     if(e.b){
+       if(Math.abs(player.vx)>35||hero===1||hero===2||hero===6){e.hp-=3;score+=500;player.inv=.18;player.vy=-14;burst(e.x,e.y,30,1.4,"boss")}
+       else if(player.inv<=0){player.hp-=20;player.inv=1;player.vx=-player.vx*.4}
+       if(e.hp<=0){e.alive=0;score+=50000;burst(e.x,e.y,180,4,"hyper")}
+     }else if(Math.abs(player.vx)>15||hero!==0){e.alive=0;score+=300;combo++;player.vy=-11;burst(e.x,e.y,25,1.2,"enemy")}
+     else if(player.inv<=0){player.hp-=10;player.inv=.9;player.vx=-player.vx*.6}
+   }
+ });
+ particles.forEach(q=>{
+   q.x+=q.vx*dt*4;q.y+=q.vy*dt*4;q.life-=dt;q.vy+=.16;
+   if(q.k==="bolt"&&player.inv<=0&&Math.hypot(player.x-q.x,player.y-q.y)<player.r+q.r){q.life=0;player.hp-=16;player.inv=.8;burst(player.x,player.y,12,.7,"hit")}
+   if(["ki","orange","bubble","carrot","magic","sword","blue","green","purple","ghost","gold"].includes(q.k)){
+     for(const e of enemies)if(e.alive&&Math.hypot(e.x-q.x,e.y-q.y)<e.r+q.r){q.life=0;if(e.b)e.hp-=2;else e.alive=0;score+=e.b?400:350;burst(e.x,e.y,12,1,e.b?"boss":"enemy");break}
+   }
+ });
+ particles=particles.filter(q=>q.life>0);
+ cam=Math.max(0,Math.min(36000-W,player.x-W*.30));
+ if(!boss.alive&&player.x>35800){won=true;show(true,"INFINITE CHAOS CLEARED!","Score "+score.toLocaleString()+" • Rings "+ringCount+" • Press R to replay")}
+ if(player.hp<=0)show(true,"GAME OVER","Press R to restart");
+ document.getElementById("mission").textContent=boss.alive&&player.x>boss.x-1200?`FINAL BOSS · TITAN CORE ${Math.max(0,boss.hp)}/${boss.max}`:`MISSION · Collect 80 Rings: ${Math.min(80,ringCount)}/80`;
+ document.getElementById("boss").style.display=(boss.alive&&player.x>boss.x-1200)?"block":"none";
+ document.getElementById("bossFill").style.width=Math.max(0,100*boss.hp/boss.max)+"%";
 }
 function sx(x){return x-cam}
-function drawWorld(){
-  const gy=ground();
-  // grass island
-  ctx.fillStyle="#203f2c";ctx.fillRect(0,gy,W,H-gy);
-  ctx.fillStyle="#5b954f";ctx.fillRect(0,gy,W,12);
-  for(let x=Math.floor(cam/100)*100;x<cam+W+200;x+=100){ctx.fillStyle="#376c40";ctx.fillRect(sx(x),gy+15,46,9)}
-  // ancient towers
-  for(let x=Math.floor(cam/650)*650;x<cam+W+800;x+=650){
-    const xx=sx(x);ctx.fillStyle="#71838b";ctx.fillRect(xx,gy-265,58,265);ctx.fillStyle="#9daeb2";ctx.fillRect(xx-10,gy-277,78,16);ctx.fillStyle="#53636a";ctx.fillRect(xx+12,gy-215,34,72);
-  }
-  // rails
-  for(let x=Math.floor(cam/800)*800;x<cam+W+900;x+=800){
-    const xx=sx(x);ctx.strokeStyle="rgba(230,245,247,.42)";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(xx,gy-250);ctx.quadraticCurveTo(xx+180,gy-360,xx+430,gy-210);ctx.stroke();
-  }
-  // platforms
-  platforms.forEach(p=>{if(sx(p.x)>W+100||sx(p.x+p.w)<-100)return;ctx.fillStyle="#8e9ca0";ctx.fillRect(sx(p.x),p.y,p.w,p.h);ctx.fillStyle="#c2ced0";ctx.fillRect(sx(p.x),p.y,p.w,5)});
-  // boost pads
-  boostPads.forEach(p=>{const xx=sx(p.x);if(xx<-50||xx>W+50)return;ctx.fillStyle="#ffe063";ctx.fillRect(xx-32,p.y,64,9);ctx.fillStyle="#1b5";for(let i=0;i<4;i++)ctx.fillRect(xx-22+i*14,p.y-5,9,5)});
-  // rings
-  coins.forEach(r=>{if(r.got)return;const xx=sx(r.x);if(xx<-20||xx>W+20)return;ctx.strokeStyle="#ffd94c";ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(xx,r.y,r.r*(.5+.5*Math.abs(Math.cos(r.spin))),r.r,0,0,Math.PI*2);ctx.stroke()});
-  // enemies
-  enemies.forEach(e=>{if(!e.alive)return;const xx=sx(e.x);if(xx<-100||xx>W+100)return;
-    ctx.save();ctx.translate(xx,e.y);
-    if(e.boss)drawBoss();else drawEnemy(e);
-    ctx.restore();
-  });
+function draw(){
+ ctx.clearRect(0,0,W,H);const gy=ground();
+ let sky=ctx.createLinearGradient(0,0,0,gy);sky.addColorStop(0,"#4bc7ff");sky.addColorStop(1,"#e8fbff");ctx.fillStyle=sky;ctx.fillRect(0,0,W,gy);
+ ctx.fillStyle="rgba(255,250,190,.75)";ctx.beginPath();ctx.arc(W*.78,H*.16,62,0,7);ctx.fill();
+ for(let layer=0;layer<3;layer++){ctx.fillStyle=["#8bb69d","#5f9274","#3e684f"][layer];let off=cam*.08*(layer+1);for(let x=-700-off;x<W+700;x+=620){ctx.beginPath();ctx.moveTo(x,gy-layer*20);ctx.lineTo(x+150,gy-130-layer*25);ctx.lineTo(x+310,gy-45-layer*15);ctx.lineTo(x+460,gy-160-layer*28);ctx.lineTo(x+620,gy);ctx.lineTo(x+620,H);ctx.lineTo(x,H);ctx.closePath();ctx.fill()}}
+ ctx.fillStyle="#217c9b";ctx.fillRect(0,gy+10,W,H-gy-10);
+ ctx.fillStyle="#1e412b";ctx.fillRect(0,gy,W,25);ctx.fillStyle="#5d9f54";ctx.fillRect(0,gy,W,9);
+ for(let x=Math.floor(cam/650)*650;x<cam+W+800;x+=650){let xx=sx(x);ctx.fillStyle="#75878b";ctx.fillRect(xx,gy-270,58,270);ctx.fillStyle="#aab8bb";ctx.fillRect(xx-10,gy-282,78,16)}
+ for(let x=-400-(cam%700);x<W+800;x+=700){ctx.strokeStyle="rgba(250,255,255,.4)";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x,gy-230);ctx.quadraticCurveTo(x+240,gy-330,x+500,gy-190);ctx.stroke()}
+ rings.forEach(q=>{if(q.got)return;let x=sx(q.x);if(x<-30||x>W+30)return;ctx.strokeStyle="#ffd94a";ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(x,q.y, q.r*(.35+.65*Math.abs(Math.cos(q.a))),q.r,0,0,7);ctx.stroke()});
+ enemies.forEach(e=>{if(!e.alive)return;let x=sx(e.x);if(x<-100||x>W+100)return;ctx.save();ctx.translate(x,e.y);if(e.b)drawBoss();else drawEnemy(e);ctx.restore()});
+ particles.forEach(q=>{const colors={blue:"#5bc7ff",gold:"#ffe154",hyper:"#fff",purple:"#bd8dff",red:"#ff5555",pink:"#ff9ec0",ki:"#a9e6ff",orange:"#ff9b3a",green:"#52ee6a",bubble:"#a9efff",carrot:"#ef8e3d",magic:"#fff1aa",sword:"#c4ebff",ghost:"#e4fbff",ring:"#ffdb52",enemy:"#ff7777",boss:"#f4a1ff",hit:"#ffe0e0",spark:"#e7f6ff",jump:"#d8f3ff",switch:"#fff",bolt:"#ff6cff"};ctx.globalAlpha=Math.min(1,Math.max(0,q.life*2));ctx.fillStyle=colors[q.k]||"#fff";ctx.beginPath();ctx.arc(sx(q.x),q.y,q.r,0,7);ctx.fill();ctx.globalAlpha=1});
+ drawPlayer();
+ document.getElementById("statsText").innerHTML=`<b>${HEROES[hero][0]}</b> · ${HEROES[hero][3]} · <b>${HEROES[hero][4]}</b><br>Speed <b>${hero===0||hero===1||hero===2||hero===6?"∞":HEROES[hero][1]}</b> · Score <b>${score.toLocaleString()}</b> · Rings <b>${ringCount}</b> · HP <b>${Math.max(0,player.hp)}</b><br><span style="opacity:.76">A/D or ←/→ · Space jump · Shift boost · E power · Q switch · R restart</span>`;
 }
 function drawEnemy(e){
-  ctx.fillStyle=e.type===0?"#b12b30":e.type===1?"#314b9b":e.type===2?"#7a3e86":"#4a4e55";
-  ctx.beginPath();ctx.arc(0,0,e.r,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#f5f7fa";ctx.beginPath();ctx.arc(-9,-7,5,0,7);ctx.arc(9,-7,5,0,7);ctx.fill();ctx.fillStyle="#111";ctx.beginPath();ctx.arc(-8,-7,2.3,0,7);ctx.arc(8,-7,2.3,0,7);ctx.fill();
-  ctx.fillStyle="#222";ctx.fillRect(-18,13,36,8);
+ ctx.fillStyle=["#b52d37","#3b56ad","#7a3e8d","#50565f","#2d8b50"][e.type%5]||"#555";ctx.beginPath();ctx.arc(0,0,e.r,0,7);ctx.fill();
+ ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(-9,-7,5,0,7);ctx.arc(9,-7,5,0,7);ctx.fill();ctx.fillStyle="#111";ctx.beginPath();ctx.arc(-8,-7,2,0,7);ctx.arc(8,-7,2,0,7);ctx.fill();
 }
-function drawBoss(){
-  const r=boss.r;
-  ctx.fillStyle="#49234f";ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#242a35";ctx.fillRect(-42,-25,84,48);
-  ctx.fillStyle="#db39dd";ctx.beginPath();ctx.arc(0,-10,14,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#f5f5f5";ctx.fillRect(-29,15,58,8);
-  ctx.fillStyle="#ff6b6b";ctx.fillRect(-30,-54,60,8);ctx.fillStyle="#77ef92";ctx.fillRect(-30,-54,60*(boss.hp/boss.max),8);
-}
+function drawBoss(){ctx.fillStyle="#54225d";ctx.beginPath();ctx.arc(0,0,boss.r,0,7);ctx.fill();ctx.fillStyle="#252a35";ctx.fillRect(-48,-30,96,60);ctx.fillStyle="#e64bef";ctx.beginPath();ctx.arc(0,-8,18,0,7);ctx.fill();ctx.strokeStyle="#ff9bff";ctx.lineWidth=6;ctx.beginPath();ctx.arc(0,0,boss.r+13,0,7);ctx.stroke()}
 function drawPlayer(){
-  const h=HEROES[hero],x=sx(player.x),y=player.y;
-  ctx.save();ctx.translate(x,y);
-  if(player.vx<-.2)ctx.scale(-1,1);
-  // aura during boost/special
-  if(Math.abs(player.vx)>16){
-    ctx.strokeStyle=h.base;ctx.globalAlpha=.32;ctx.lineWidth=8;ctx.beginPath();ctx.arc(0,0,38,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
-  }
-  if(h.name==="Sonic"||h.name==="Shadow"){
-    const dark=h.name==="Shadow";
-    ctx.fillStyle=dark?"#151924":"#1264da";
-    ctx.beginPath();ctx.moveTo(-12,-20);ctx.lineTo(-45,-39);ctx.lineTo(-28,-8);ctx.lineTo(-52,-14);ctx.lineTo(-26,5);ctx.lineTo(-41,19);ctx.lineTo(-3,14);ctx.closePath();ctx.fill();
-    ctx.fillStyle=h.base;ctx.beginPath();ctx.arc(0,0,28,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(11,-7,15,19,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#111";ctx.beginPath();ctx.arc(15,-10,4,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=dark?"#e33535":"#d62d2d";ctx.fillRect(-22,19,19,10);ctx.fillRect(4,19,19,10);ctx.fillStyle="#fff";ctx.fillRect(-25,13,26,6);ctx.fillRect(2,13,26,6);
-  } else {
-    ctx.fillStyle=h.base;ctx.beginPath();ctx.arc(0,0,28,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(10,-7,15,19,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#111";ctx.beginPath();ctx.arc(14,-9,4,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#fff";ctx.fillRect(-24,18,20,8);ctx.fillRect(4,18,20,8);
-    if(h.name==="Tails"){ctx.fillStyle="#f3a51f";ctx.beginPath();ctx.arc(-28,8,18,0,Math.PI*2);ctx.fill();ctx.arc(-34,20,13,0,Math.PI*2);ctx.fill()}
-    if(h.name==="Knuckles"){ctx.fillStyle="#fff";ctx.fillRect(-38,-5,14,7);ctx.fillRect(24,-5,14,7)}
-    if(h.name==="Amy"){ctx.fillStyle="#d94181";ctx.fillRect(-18,-35,36,8)}
-  }
-  if(player.inv>0){ctx.strokeStyle="rgba(255,255,255,.8)";ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,43,0,Math.PI*2);ctx.stroke()}
-  ctx.restore();
-  ctx.fillStyle="rgba(0,0,0,.5)";ctx.fillRect(x-54,y-73,108,21);ctx.fillStyle="#fff";ctx.font="900 12px Arial";ctx.textAlign="center";ctx.fillText(h.short,x,y-58);ctx.textAlign="left";
+ const h=HEROES[hero],x=sx(player.x),y=player.y;
+ for(let i=0;i<player.trail.length;i++){let t=player.trail[i];ctx.globalAlpha=i/player.trail.length*.32;ctx.fillStyle=h[2];ctx.beginPath();ctx.arc(sx(t.x),t.y,17+i,0,7);ctx.fill()}ctx.globalAlpha=1;
+ ctx.save();ctx.translate(x,y);if(player.vx<-.2)ctx.scale(-1,1);
+ if(hero<=2||hero===6){
+   ctx.fillStyle=hero===6?"#131722":h[2];ctx.beginPath();ctx.moveTo(-11,-22);ctx.lineTo(-44,-42);ctx.lineTo(-28,-10);ctx.lineTo(-52,-18);ctx.lineTo(-26,4);ctx.lineTo(-43,19);ctx.lineTo(-4,14);ctx.closePath();ctx.fill();
+   ctx.fillStyle=h[2];ctx.beginPath();ctx.arc(0,0,29,0,7);ctx.fill();
+ }else{ctx.fillStyle=h[2];ctx.beginPath();ctx.arc(0,0,29,0,7);ctx.fill()}
+ ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(11,-7,15,20,0,0,7);ctx.fill();ctx.fillStyle="#111";ctx.beginPath();ctx.arc(15,-10,4,0,7);ctx.fill();
+ ctx.fillStyle=hero===6?"#e63434":"#d93034";ctx.fillRect(-23,20,20,10);ctx.fillRect(4,20,20,10);ctx.fillStyle="#fff";ctx.fillRect(-26,13,28,7);ctx.fillRect(2,13,28,7);
+ if(player.inv>0){ctx.strokeStyle="rgba(255,255,255,.82)";ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,46,0,7);ctx.stroke()}
+ ctx.restore();
+ ctx.fillStyle="rgba(0,0,0,.55)";ctx.fillRect(x-58,y-75,116,21);ctx.fillStyle="#fff";ctx.font="900 12px Arial";ctx.textAlign="center";ctx.fillText(h[0],x,y-60);ctx.textAlign="left";
 }
-function drawParticles(){
-  for(const q of particles){
-    ctx.globalAlpha=Math.max(0,Math.min(1,q.life*2));
-    const colors={spark:"#cfeaff",blue:"#2ea4ff",gold:"#ffd447",red:"#ff554f",pink:"#ff9cc2",purple:"#bd8cff",ki:"#a6dcff",orange:"#ff9f38",green:"#58ed72",bubble:"#a7efff",carrot:"#f28c36",magic:"#fff1ad",sword:"#b9e6ff",boost:"#ffef7d",ring:"#ffe361",enemy:"#ff726f",boss:"#ffb0ff",bossdeath:"#fff",hit:"#ffdfdf"};
-    ctx.fillStyle=colors[q.kind]||"#fff";ctx.beginPath();ctx.arc(sx(q.x),q.y,q.r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
-  }
-}
-function updateUI(){
-  const h=HEROES[hero];
-  const nearBoss=boss.alive && player.x>boss.x-900;
-  statsEl.innerHTML=`<b>${h.name}</b> · ${h.ability} · <b>${h.power}</b><br>`+
-  `Score <b>${score.toLocaleString()}</b> &nbsp; Rings <b>${rings}</b> &nbsp; Boost <b>${Math.round(player.boost)}%</b> &nbsp; HP <b>${Math.max(0,player.health)}</b>`+
-  (combo>1?` &nbsp; Combo <b>x${combo}</b>`:"")+`<br><span style="opacity:.76">A/D or ←/→ move · Space jump · Shift boost · E power · Q switch · R restart</span>`;
-  if(nearBoss)missionEl.textContent=`TITAN CORE — ${Math.max(0,boss.hp)}/${boss.max} HP · defeat the boss, then reach the gate`;
-}
-function restart(){resetWorld()}
-function render(){ctx.clearRect(0,0,W,H);drawBackground();drawWorld();drawParticles();drawPlayer();updateUI()}
-
-resetWorld();
-let last=performance.now();
-function frame(t){const dt=Math.min(.034,(t-last)/1000);last=t;update(dt);render();requestAnimationFrame(frame)}
-requestAnimationFrame(frame);
+function show(on,a,b){center(on,a,b)}
+reset();
+let last=performance.now();function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
 </script>
 </body>
-</html>'''
+</html>"""
 
-p=Path("/mnt/data/sonic_cartoon_heroes_ultimate.html")
-p.write_text(game,encoding="utf-8")
-print(p)
+path = Path("/mnt/data/sonic_cartoon_heroes_infinite_speed.html")
+path.write_text(html, encoding="utf-8")
+print(f"Created: {path}")
