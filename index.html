@@ -1,276 +1,274 @@
-<!DOCTYPE html>
+from pathlib import Path
+import textwrap
+
+html = r'''<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sonic Ultimate Custom Engine</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background: #050508; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
-        #game-container { position: relative; width: 800px; height: 480px; background: #000; border: 4px solid #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
-        canvas { width: 100%; height: 100%; display: block; }
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(10, 15, 30, 0.96); z-index: 10; padding: 20px; text-align: center; }
-        .hidden { display: none !important; }
-        h1 { font-size: 2.2rem; margin-bottom: 12px; color: #38bdf8; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(56,189,248,0.5); }
-        .roster-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 15px; }
-        .char-card { background: #1e293b; border: 2px solid transparent; border-radius: 8px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; transition: all 0.2s; }
-        .char-card:hover { background: #2d3748; }
-        .char-card.selected { border-color: #38bdf8; background: #0369a1; }
-        .char-color-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; margin-bottom: 4px; }
-        .char-name { font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
-        .diff-row { display: flex; gap: 8px; margin-bottom: 15px; }
-        .btn-diff { background: #334155; border: 1px solid #475569; padding: 6px 14px; font-size: 0.75rem; border-radius: 6px; color: #cbd5e1; cursor: pointer; font-weight: bold; }
-        .btn-diff.selected { border-color: #38bdf8; color: #fff; background: #2563eb; }
-        .btn-start { background: #2563eb; color: #fff; border: none; padding: 10px 35px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
-        #hud-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; }
-        .hud-top { display: flex; justify-content: space-between; width: 100%; }
-        .hud-stats { background: rgba(0,0,0,0.65); padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1); }
-        .hud-actions { display: flex; gap: 8px; pointer-events: auto; }
-        .btn-hud { background: rgba(30,41,59,0.85); border: 1px solid #475569; border-radius: 6px; width: 36px; height: 36px; color: #fff; cursor: pointer; font-weight: bold; }
-        .ability-bar { display: flex; gap: 6px; background: rgba(0,0,0,0.75); padding: 8px; border-radius: 8px; pointer-events: auto; align-self: center; }
-        .btn-ability { width: 68px; height: 44px; background: #1e293b; border: 2px solid #475569; border-radius: 6px; color: #fff; cursor: pointer; font-size: 0.7rem; font-weight: bold; }
-        #dialogue-overlay { position: absolute; bottom: 75px; left: 5%; width: 90%; background: rgba(6,10,25,0.95); border: 3px solid #38bdf8; border-radius: 10px; z-index: 8; padding: 12px; display: flex; gap: 15px; align-items: center; pointer-events: auto; }
-        .dialogue-portrait { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #fff; }
-        .dialogue-body { flex: 1; text-align: left; }
-        .dialogue-speaker { font-weight: bold; font-size: 0.9rem; color: #38bdf8; text-transform: uppercase; }
-        .dialogue-text { font-size: 0.8rem; color: #f1f5f9; }
-        .quiz-container { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
-        .btn-answer { background: #1e293b; border: 1px solid #475569; padding: 6px; border-radius: 4px; color: #fff; font-size: 0.75rem; cursor: pointer; text-align: left; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sonic & Cartoon Heroes: Chaos World</title>
+<style>
+  html,body{margin:0;height:100%;background:#070b14;color:#fff;font-family:Arial,Helvetica,sans-serif;overflow:hidden}
+  #wrap{position:relative;width:100%;height:100%}
+  canvas{display:block;width:100%;height:100%;background:linear-gradient(#7fd8ff,#d9f7ff 53%,#3d7047 53%,#1c3b26)}
+  #hud{position:absolute;top:14px;left:14px;right:14px;display:flex;gap:10px;align-items:flex-start;pointer-events:none}
+  .panel{background:rgba(3,7,14,.72);backdrop-filter:blur(7px);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:10px 12px;box-shadow:0 10px 35px rgba(0,0,0,.24)}
+  #stats{min-width:250px}
+  #title{font-weight:800;font-size:16px;margin-bottom:4px}
+  #hint{font-size:12px;opacity:.82;line-height:1.35}
+  #roster{display:flex;gap:6px;flex-wrap:wrap;max-width:58vw}
+  .hero{font-size:11px;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.13)}
+  .hero.active{background:#fff;color:#06111c;font-weight:800}
+  #message{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;min-width:320px;display:none}
+  #message .big{font-size:40px;font-weight:900;letter-spacing:1px}
+  #message .small{margin-top:7px;font-size:14px;opacity:.85}
+  #touch{position:absolute;bottom:16px;left:16px;right:16px;display:none;justify-content:space-between;pointer-events:none}
+  .touchGroup{display:flex;gap:10px}
+  button{pointer-events:auto;border:0;border-radius:16px;padding:14px 17px;font-size:18px;font-weight:800;background:rgba(5,12,22,.72);color:#fff;border:1px solid rgba(255,255,255,.16)}
+  @media (max-width:900px),(pointer:coarse){#touch{display:flex}.hero{font-size:10px;padding:5px 7px}#roster{max-width:45vw}}
+</style>
 </head>
 <body>
+<div id="wrap">
+<canvas id="game"></canvas>
+<div id="hud">
+  <div class="panel" id="stats">
+    <div id="title">SONIC & CARTOON HEROES — CHAOS WORLD</div>
+    <div id="info">Loading…</div>
+    <div id="hint">A/D or ←/→ move · Space jump · Shift boost · E special · Q switch hero · R restart</div>
+  </div>
+  <div class="panel" id="roster"></div>
+</div>
+<div class="panel" id="message">
+  <div class="big" id="msgBig"></div>
+  <div class="small" id="msgSmall"></div>
+</div>
+<div id="touch">
+  <div class="touchGroup">
+    <button data-k="left">◀</button><button data-k="right">▶</button>
+  </div>
+  <div class="touchGroup">
+    <button data-k="jump">JUMP</button><button data-k="boost">BOOST</button><button data-k="special">POWER</button>
+  </div>
+</div>
+</div>
+<script>
+"use strict";
+const c=document.getElementById("game"),ctx=c.getContext("2d");
+const info=document.getElementById("info"), roster=document.getElementById("roster");
+const msg=document.getElementById("message"), msgBig=document.getElementById("msgBig"), msgSmall=document.getElementById("msgSmall");
 
-    <div id="game-container">
-        <canvas id="gameCanvas" width="800" height="480"></canvas>
+const HEROES=[
+ {name:"Sonic",abbr:"SON",speed:0.92,jump:1.08,power:"Spin Dash",desc:"Fast, agile, homing attack"},
+ {name:"Goku",abbr:"GOK",speed:0.63,jump:1.32,power:"Ki Burst",desc:"Air jump + ranged burst"},
+ {name:"Ben 10",abbr:"BEN",speed:0.68,jump:1.08,power:"Alien Shift",desc:"Short invulnerable dash"},
+ {name:"Naruto",abbr:"NAR",speed:0.76,jump:1.14,power:"Shadow Rush",desc:"Clone-laced strike"},
+ {name:"SpongeBob",abbr:"SPG",speed:0.54,jump:1.0,power:"Bubble Blast",desc:"Projectile bubbles"},
+ {name:"Bugs Bunny",abbr:"BUG",speed:0.60,jump:1.03,power:"Carrot Spin",desc:"Boomerang projectile"},
+ {name:"Mickey",abbr:"MIC",speed:0.57,jump:1.02,power:"Magic Spark",desc:"Chain lightning"},
+ {name:"Samurai Jack",abbr:"JAK",speed:0.66,jump:1.09,power:"Sword Wave",desc:"Wide energy slash"},
+ {name:"Teen Titans",abbr:"TIT",speed:0.64,jump:1.12,power:"Team Strike",desc:"Three-way projectile"},
+ {name:"Powerpuff",abbr:"PPG",speed:0.72,jump:1.24,power:"Heart Burst",desc:"Vertical burst"}
+];
+let heroIndex=0;
 
-        <!-- START MENU SCREEN -->
-        <div id="menu-screen" class="screen">
-            <h1>Sonic Custom Engine</h1>
-            <div class="roster-grid" id="roster"></div>
-            <div class="diff-row">
-                <button class="btn-diff selected" data-diff="medium">NORMAL</button>
-                <button class="btn-diff" data-diff="scary">SCARY MODE</button>
-                <button class="btn-diff" data-diff="quiz">7-YR QUIZ</button>
-            </div>
-            <button class="btn-start" id="btn-play">Start Game</button>
-        </div>
-
-        <!-- HEADS UP DISPLAY HUD -->
-        <div id="hud-layer" class="hidden">
-            <div class="hud-top">
-                <div class="hud-stats">
-                    <div>CHARACTER: <span id="hud-char-name" style="color:#38bdf8;">SONIC</span></div>
-                    <div>RINGS: <span id="hud-rings" style="color:#facc15;">0</span></div>
-                    <div>SCORE: <span id="hud-score" style="color:#4ade80;">0</span></div>
-                    <div>SPEED: <span id="hud-speed">0 mph</span></div>
-                </div>
-                <div class="hud-actions">
-                    <button class="btn-hud" id="btn-talk">🎬</button>
-                    <button class="btn-hud" id="btn-restart">🔄</button>
-                </div>
-            </div>
-
-            <!-- POPUP TEXT & QUIZ BOX -->
-            <div id="dialogue-overlay" class="hidden">
-                <div class="dialogue-portrait" id="diag-portrait"></div>
-                <div class="dialogue-body">
-                    <div class="dialogue-speaker" id="diag-speaker">SONIC</div>
-                    <div class="dialogue-text" id="diag-text">Gotta go fast!</div>
-                    <div class="quiz-container hidden" id="diag-quiz-box"></div>
-                </div>
-            </div>
-
-            <!-- ACTION ABILITY SURGE BAR -->
-            <div class="ability-bar">
-                <button class="btn-ability" data-index="0">1: DASH</button>
-                <button class="btn-ability" data-index="1">2: FLY</button>
-                <button class="btn-ability" data-index="2">3: ATTACK</button>
-                <button class="btn-ability" data-index="3">4: SHIELD</button>
-                <button class="btn-ability" data-index="4">5: HYPER</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Roster data with built-in color configurations
-        const ROSTER = [
-            { id: "sonic", name: "Sonic", primary: "#0066cc", secondary: "#eab308", line: "Gotta go fast! You can't catch what you can't see!" },
-            { id: "shadow", name: "Shadow", primary: "#1e1e1e", secondary: "#dc2626", line: "I am the Ultimate Lifeform. You are wasting my time." },
-            { id: "tails", name: "Tails", primary: "#f59e0b", secondary: "#ffffff", line: "I'm not dead! Let's complete the dynamic mission!" },
-            { id: "knuckles", name: "Knuckles", primary: "#dc2626", secondary: "#eab308", line: "My fists will shatter your playthings!" },
-            { id: "dark_clone", name: "Dark Sonic", primary: "#2e1065", secondary: "#000000", line: "You cannot escape the reach of the void..." }
-        ];
-
-        const FACTS_QUIZ = [
-            { q: "What is 5 + 2?", a: ["7", "6", "9", "4"], c: 0 },
-            { q: "What color is a clean strawberry?", a: ["Blue", "Red", "Green"], c: 1 },
-            { q: "Which animal says 'Meow'?", a: ["Dog", "Lion", "Cat"], c: 2 }
-        ];
-
-        let appState = "menu"; let chosenCharacter = ROSTER[0]; let currentDifficulty = "medium";
-        let score = 0; let rings = 0; let runningDistance = 0; let globalGameSpeed = 0; let targetSpeed = 8;
-        let currentQuizIndex = 0; let gravityDirection = 1; let animFrame = 0;
-
-        const canvas = document.getElementById("gameCanvas"); const ctx = canvas.getContext("2d");
-        let player = { x: 350, y: 292, vy: 0, width: 36, height: 46, isJumping: false, form: "normal", flightTicks: 0 };
-        let boss = { x: 650, y: 240, hp: 100, floatOffset: 0 };
-        let trackRings = []; let trackObstacles = []; let debrisArray = [];
-
-        // Setup the Character Grid Interface
-        const rosterContainer = document.getElementById("roster");
-        ROSTER.forEach((char, idx) => {
-            const card = document.createElement("div");
-            card.className = `char-card ${idx === 0 ? 'selected' : ''}`;
-            
-            const dot = document.createElement("div");
-            dot.className = "char-color-dot";
-            dot.style.backgroundColor = char.primary;
-            
-            const nameEl = document.createElement("div");
-            nameEl.className = "char-name";
-            nameEl.textContent = char.name;
-            
-            card.appendChild(dot); card.appendChild(nameEl); rosterContainer.appendChild(card);
-            card.addEventListener("click", () => {
-                document.querySelectorAll(".char-card").forEach(c => c.classList.remove("selected"));
-                card.classList.add("selected"); chosenCharacter = char;
-            });
-        });
-
-        document.querySelectorAll(".btn-diff").forEach(btn => {
-            btn.addEventListener("click", () => {
-                document.querySelectorAll(".btn-diff").forEach(b => b.classList.remove("selected"));
-                btn.classList.add("selected"); currentDifficulty = btn.dataset.diff;
+const keys={};
+addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true;if([" ","arrowleft","arrowright","shift"].includes(e.key.toLowerCase()))e.preventDefault();
+ if(e.key.toLowerCase()==="q") switchHero();
+ if(e.key.toLowerCase()==="r") reset();
 });
+addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+document.querySelectorAll("button").forEach(b=>{
+  const k=b.dataset.k;
+  const down=e=>{e.preventDefault();keys[k]=true};
+  const up=e=>{e.preventDefault();keys[k]=false};
+  b.addEventListener("pointerdown",down); b.addEventListener("pointerup",up); b.addEventListener("pointercancel",up); b.addEventListener("pointerleave",up);
 });
-document.getElementById("btn-restart").addEventListener("click", () => { resetLevel(); appState = "play"; });
-document.getElementById("btn-talk").addEventListener("click", () => { triggerText(chosenCharacter.name, chosenCharacter.line, false); });
-document.getElementById("btn-play").addEventListener("click", () => {
-resetLevel(); appState = "play";
-document.getElementById("menu-screen").classList.add("hidden");
-document.getElementById("hud-layer").classList.remove("hidden");
-if (chosenCharacter.id === "tails") { triggerText("Tails", "I'm not dead! Let's complete the dynamic mission!", false); }
-});
-function triggerText(speaker, text, isQuiz) {
-appState = "dialogue"; const overlay = document.getElementById("dialogue-overlay");
-overlay.classList.remove("hidden"); document.getElementById("diag-speaker").textContent = speaker;
-document.getElementById("diag-text").textContent = text; document.getElementById("diag-portrait").style.backgroundColor = chosenCharacter.primary;
-const qBox = document.getElementById("diag-quiz-box"); qBox.innerHTML = ""; qBox.classList.add("hidden");
-if (isQuiz) {
-qBox.classList.remove("hidden");
-FACTS_QUIZ[currentQuizIndex].a.forEach((ans, idx) => {
-const btn = document.createElement("button"); btn.className = "btn-answer"; btn.textContent = ans;
-btn.addEventListener("click", () => {
-if (idx === FACTS_QUIZ[currentQuizIndex].c) { targetSpeed = 18; rings += 5; }
-else { gravityDirection *= -1; targetSpeed = 4; }
-currentQuizIndex = (currentQuizIndex + 1) % FACTS_QUIZ.length;
-appState = "play"; overlay.classList.add("hidden");
-});
-qBox.appendChild(btn);
-});
-} else { setTimeout(() => { if(appState === "dialogue") { appState = "play"; overlay.classList.add("hidden"); } }, 2500); }
+
+function resize(){c.width=innerWidth*devicePixelRatio;c.height=innerHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);W=innerWidth;H=innerHeight}
+let W=innerWidth,H=innerHeight;addEventListener("resize",resize);resize();
+
+const world={width:18000,ground:0};
+let p,enemies,rings,particles,camX,score,ringCount,time,won,lastSpecial,lastSwitch;
+const groundY=()=>H*0.70;
+
+function reset(){
+ p={x:220,y:groundY()-60,vx:0,vy:0,r:26,onGround:false,boost:100,inv:0,spin:false};
+ enemies=[];rings=[];particles=[];camX=0;score=0;ringCount=0;time=0;won=false;lastSpecial=0;lastSwitch=0;
+ for(let x=520;x<world.width-500;x+=160+Math.random()*130){
+   rings.push({x,y:groundY()-80-Math.random()*150,r:10,got:false});
+ }
+ for(let i=0;i<65;i++) enemies.push({
+   x:700+i*270+Math.random()*180,y:groundY()-34,base:groundY()-34,
+   r:28,type:i%3,alive:true,phase:Math.random()*6
+ });
+ // goal boss
+ enemies.push({x:world.width-700,y:groundY()-72,base:groundY()-72,r:52,type:9,alive:true,phase:0,boss:true,hp:20});
+ makeRoster();
+ showMessage("",""); msg.style.display="none";
 }
-document.querySelectorAll(".btn-ability").forEach(btn => {
-btn.addEventListener("click", () => { if (appState === "play") execPower(parseInt(btn.dataset.index)); });
-});
-window.addEventListener("keydown", (e) => {
-if (appState === "play") {
-if ((e.key === " " || e.key === "ArrowUp")) { player.vy = -12 * gravityDirection; player.isJumping = true; }
-if (["1","2","3","4","5"].includes(e.key)) execPower(parseInt(e.key) - 1);
+function makeRoster(){
+ roster.innerHTML="";
+ HEROES.forEach((h,i)=>{const d=document.createElement("div");d.className="hero"+(i===heroIndex?" active":"");d.textContent=(i+1)+" "+h.name;roster.appendChild(d)})
 }
-});
-function execPower(idx) {
-if (idx === 0) targetSpeed = 22;
-if (idx === 1) { player.vy = -8 * gravityDirection; player.flightTicks = 50; }
-if (idx === 2) debrisArray.push({ x: player.x + 30, y: player.y + 20, vx: 12 });
-if (idx === 3) { player.form = "shield"; setTimeout(() => player.form = "normal", 3000); }
-if (idx === 4) { player.form = player.form === "hyper" ? "normal" : "hyper"; targetSpeed = player.form === "hyper" ? 28 : 8; }
+function switchHero(){
+ if(time-lastSwitch<0.35||won)return;
+ lastSwitch=time;heroIndex=(heroIndex+1)%HEROES.length;p.vx*=0.75;
+ burst(p.x,p.y,16,0.9);
+ makeRoster();
 }
-function resetLevel() {
-score = 0; rings = 0; runningDistance = 0; globalGameSpeed = 6; targetSpeed = 8; gravityDirection = 1;
-player.y = 292; player.vy = 0; player.form = "normal"; player.flightTicks = 0; boss.hp = 100;
-trackRings = []; trackObstacles = []; debrisArray = [];
-for(let i=0; i<4; i++) {
-trackRings.push({ x: 500 + (i * 180), y: 240, active: true });
-trackObstacles.push({ x: 700 + (i * 260), y: 316 });
+function burst(x,y,n,s=1){for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-.5)*9*s,vy:(Math.random()-.5)*9*s,life:.6+Math.random()*.5,r:2+Math.random()*5})}
+
+function shoot(){
+ const h=HEROES[heroIndex];
+ if(time-lastSpecial<.6||won)return;
+ lastSpecial=time;
+ if(h.name==="Sonic"){p.spin=true;p.vx+=Math.sign(p.vx||1)*8;burst(p.x,p.y,12,1.4)}
+ else if(h.name==="Goku"){p.vx*=1.05; for(let j=-1;j<=1;j++) particles.push({x:p.x+28,y:p.y-8+j*7,vx:13,vy:j*2,life:1.1,r:9,kind:"ki"});}
+ else {for(let j=0;j<3;j++)particles.push({x:p.x+25,y:p.y-10+(j-1)*8,vx:11+j*1.5,vy:(j-1)*1.5,life:.9,r:7+2*j,kind:"shot"})}
 }
-document.getElementById("dialogue-overlay").classList.add("hidden");
+
+function update(dt){
+ if(won)return;
+ time+=dt;
+ const h=HEROES[heroIndex];
+ const left=keys["a"]||keys["arrowleft"]||keys.left;
+ const right=keys["d"]||keys["arrowright"]||keys.right;
+ const jump=keys[" "]||keys["w"]||keys["arrowup"]||keys.jump;
+ const boost=keys.shift||keys.boost;
+ if(left)p.vx-=0.9*h.speed;
+ if(right)p.vx+=1.15*h.speed;
+ if(boost&&p.boost>0&&(left||right)){p.vx*=1.02;p.boost-=35*dt}
+ else p.boost=Math.min(100,p.boost+14*dt);
+ p.vx*=Math.pow(.91,dt*60); p.vx=Math.max(-16*h.speed,Math.min(28*h.speed,p.vx));
+ if((jump)&&p.onGround){p.vy=-16*h.jump;p.onGround=false;burst(p.x,p.y+25,6,.7)}
+ if(keys.e){shoot();keys.e=false}
+ p.vy+=0.75*dt*60;
+ p.x+=p.vx*dt*4; p.y+=p.vy*dt*4;
+ if(p.y>=groundY()-p.r){p.y=groundY()-p.r;p.vy=0;p.onGround=true}
+ p.x=Math.max(30,Math.min(world.width-80,p.x));
+ p.inv=Math.max(0,p.inv-dt);
+
+ enemies.forEach(e=>{
+   if(!e.alive)return;
+   e.phase+=dt*2;
+   if(e.boss){e.x+=Math.sin(e.phase)*0.25;return}
+   e.x+=Math.sin(e.phase)*.6;
+   const dx=p.x-e.x,dy=p.y-e.y;
+   const d=Math.hypot(dx,dy);
+   if(d<p.r+e.r){
+     if(p.spin||Math.abs(p.vx)>8){e.alive=false;score+=100;ringCount+=2;burst(e.x,e.y,20,1.2);p.vy=-9}
+     else if(p.inv<=0){p.inv=1.1;p.vx=-p.vx*.65;score=Math.max(0,score-50);burst(p.x,p.y,15,.7)}
+   }
+ });
+ rings.forEach(r=>{
+   if(r.got)return;
+   if(Math.hypot(p.x-r.x,p.y-r.y)<p.r+r.r+10){r.got=true;ringCount++;score+=10;burst(r.x,r.y,4,.5)}
+ });
+ particles.forEach(q=>{q.x+=q.vx*dt*4;q.y+=q.vy*dt*4;q.life-=dt;q.vy+=0.18});
+ particles=particles.filter(q=>q.life>0);
+ if(p.x>world.width-830){
+   const boss=enemies[enemies.length-1];
+   if(boss&&boss.alive&&Math.hypot(p.x-boss.x,p.y-boss.y)<p.r+boss.r){
+      if((p.spin||Math.abs(p.vx)>9)&&p.inv<=0){boss.hp--;p.inv=.25;burst(boss.x,boss.y,22,1.3);score+=500;p.vy=-11;if(boss.hp<=0)boss.alive=false}
+      else if(p.inv<=0){p.inv=1;p.vx=-p.vx;score=Math.max(0,score-150)}
+   }
+   if(boss&&!boss.alive&&p.x>world.width-200){won=true;showMessage("WORLD CLEARED!","Score "+score+"  •  Rings "+ringCount+"  •  Press R to play again")}
+ }
+ camX=Math.max(0,Math.min(world.width-W/1.15,p.x-W*.32));
+ p.spin = false;
 }
-function drawSonicSprite(x, y, color, shoeColor, isHyper) {
-ctx.save();
-if (isHyper) { ctx.shadowBlur = 20; ctx.shadowColor = hsl(${Date.now() % 360}, 100%, 60%); }
-// Draw round animated spinning body legs blur
-animFrame += globalGameSpeed * 0.05;
-ctx.fillStyle = shoeColor;
-let legY = Math.sin(animFrame) * 6;
-ctx.beginPath(); ctx.arc(x + 10, y + 42 + legY, 6, 0, Math.PI * 2); ctx.fill();
-ctx.beginPath(); ctx.arc(x + 26, y + 42 - legY, 6, 0, Math.PI * 2); ctx.fill();
-// Head and Body Fur
-ctx.fillStyle = color;
-ctx.beginPath(); ctx.arc(x + 18, y + 18, 14, 0, Math.PI * 2); ctx.fill(); // Round Head
-ctx.fillRect(x + 8, y + 22, 20, 20); // Torso
-// Spikes (Math points to make them look like spikes instead of blocks)
-ctx.beginPath();
-ctx.moveTo(x + 6, y + 10); ctx.lineTo(x - 8, y + 6); ctx.lineTo(x + 4, y + 18);
-ctx.moveTo(x + 4, y + 16); ctx.lineTo(x - 10, y + 16); ctx.lineTo(x + 4, y + 24);
-ctx.moveTo(x + 6, y + 22); ctx.lineTo(x - 6, y + 28); ctx.lineTo(x + 10, y + 30);
-ctx.fill();
-// Face details
-ctx.fillStyle = "#fbcfe8"; ctx.beginPath(); ctx.arc(x + 26, y + 22, 6, 0, Math.PI * 2); ctx.fill(); // Muzzle
-ctx.fillStyle = isHyper ? "#ff0000" : "#059669"; ctx.fillRect(x + 24, y + 10, 4, 8); // Heroic Eyes
-ctx.fillStyle = "#000"; ctx.fillRect(x + 25, y + 12, 2, 4); // Pupil
-ctx.restore();
+
+function screenX(x){return x-camX}
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ const gy=groundY();
+
+ // sky gradient
+ let g=ctx.createLinearGradient(0,0,0,gy);g.addColorStop(0,"#72cfff");g.addColorStop(1,"#e7fbff");ctx.fillStyle=g;ctx.fillRect(0,0,W,gy);
+ // distant mountains / islands
+ for(let layer=0;layer<3;layer++){
+   ctx.fillStyle=layer===0?"#80b3a0":layer===1?"#5c8e76":"#426b55";
+   const base=gy-layer*16,step=260-layer*35;
+   ctx.beginPath();ctx.moveTo(0,base);
+   for(let x=-step;x<W+step;x+=step){ctx.lineTo(x+step*.35,base-100-layer*20-Math.sin((x+camX*.15)/180)*20);ctx.lineTo(x+step*.65,base-10)}
+   ctx.lineTo(W,gy);ctx.lineTo(0,gy);ctx.closePath();ctx.fill();
+ }
+ // floating rails/ruins
+ for(let x=Math.floor(camX/320)*320;x<camX+W+600;x+=320){
+   ctx.strokeStyle="rgba(255,255,255,.18)";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(screenX(x),gy-190);ctx.quadraticCurveTo(screenX(x+100),gy-245,screenX(x+220),gy-180);ctx.stroke()
+ }
+ // ground
+ ctx.fillStyle="#203d28";ctx.fillRect(0,gy,W,H-gy);
+ ctx.fillStyle="#4f8b4a";ctx.fillRect(0,gy,W,12);
+ for(let x=Math.floor(camX/90)*90;x<camX+W+100;x+=90){
+   ctx.fillStyle="#2f5f37";ctx.fillRect(screenX(x),gy+12,46,8);
+ }
+ // ancient pillars
+ for(let x=Math.floor(camX/540)*540;x<camX+W+800;x+=540){
+   const sx=screenX(x);ctx.fillStyle="#7d9298";ctx.fillRect(sx,gy-240,54,240);ctx.fillStyle="#a9b9bd";ctx.fillRect(sx-8,gy-250,70,16)
+ }
+ // rings
+ rings.forEach(r=>{if(r.got)return;const sx=screenX(r.x);if(sx<-20||sx>W+20)return;
+   ctx.strokeStyle="#ffd84a";ctx.lineWidth=5;ctx.beginPath();ctx.arc(sx,r.y,r.r,0,Math.PI*2);ctx.stroke();
+   ctx.strokeStyle="rgba(255,255,255,.7)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(sx-2,r.y-2,r.r-4,0,Math.PI*1.3);ctx.stroke();
+ });
+ // enemies
+ enemies.forEach(e=>{if(!e.alive)return;const sx=screenX(e.x);if(sx<-80||sx>W+80)return;
+   ctx.save();ctx.translate(sx,e.y);
+   const sc=e.boss?1.7:1;
+   // robot body
+   ctx.fillStyle=e.boss?"#6d2b72":"#b63d3d";ctx.fillRect(-24*sc,-20*sc,48*sc,40*sc);
+   ctx.fillStyle="#252a34";ctx.beginPath();ctx.arc(-10*sc,-5*sc,5*sc,0,7);ctx.arc(10*sc,-5*sc,5*sc,0,7);ctx.fill();
+   ctx.fillStyle="#e5e7eb";ctx.fillRect(-34*sc,18*sc,68*sc,9*sc);ctx.restore();
+   if(e.boss){ctx.fillStyle="#fff";ctx.font="bold 14px Arial";ctx.fillText("TITAN CORE",sx-44,e.y-78);ctx.fillStyle="#111";ctx.fillRect(sx-60,e.y-62,120,8);ctx.fillStyle="#f44";ctx.fillRect(sx-60,e.y-62,120*(e.hp/20),8)}
+ });
+ // player
+ drawHero(screenX(p.x),p.y);
+ // particles
+ particles.forEach(q=>{ctx.globalAlpha=Math.max(0,q.life);ctx.fillStyle=q.kind==="ki"?"#b6e9ff":q.kind==="shot"?"#fff":"#bfe9ff";ctx.beginPath();ctx.arc(screenX(q.x),q.y,q.r,0,7);ctx.fill();ctx.globalAlpha=1});
+ if(p.inv>0){ctx.strokeStyle="rgba(255,255,255,.75)";ctx.lineWidth=4;ctx.beginPath();ctx.arc(screenX(p.x),p.y,p.r+13,0,7);ctx.stroke()}
+ updateHud();
 }
-function updateEngine() {
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-if (appState === "play") {
-globalGameSpeed += (targetSpeed - globalGameSpeed) * 0.05; runningDistance += globalGameSpeed * 0.1; terrainOffset -= globalGameSpeed;
-if (terrainOffset <= -800) terrainOffset = 0;
-if (player.form === "hyper" && player.isJumping) { player.vy = -1 * gravityDirection; }
-else if (player.flightTicks > 0) { player.vy = -1.5 * gravityDirection; player.flightTicks--; }
-else { player.vy += 0.55 * gravityDirection; }
-player.y += player.vy;
-if (gravityDirection === 1 && player.y >= 292) { player.y = 292; player.isJumping = false; }
-if (gravityDirection === -1 && player.y <= 60) { player.y = 60; player.isJumping = false; }
-if (currentDifficulty === "quiz" && Math.floor(runningDistance) % 500 === 0 && Math.floor(runningDistance) > 0) {
-triggerText("QUIZ ENGINE", FACTS_QUIZ[currentQuizIndex].q, true);
+function drawHero(x,y){
+ const h=HEROES[heroIndex];
+ ctx.save();ctx.translate(x,y);
+ if(p.vx<-.1)ctx.scale(-1,1);
+ // shadow
+ ctx.restore();ctx.save();ctx.translate(x,y);
+ // glow for special
+ if(h.name==="Sonic"){
+   // spikes
+   ctx.fillStyle="#0b49b8";ctx.beginPath();ctx.moveTo(-14,-22);ctx.lineTo(-43,-42);ctx.lineTo(-29,-9);ctx.lineTo(-52,-15);ctx.lineTo(-24,3);ctx.lineTo(-42,15);ctx.lineTo(-5,13);ctx.closePath();ctx.fill();
+   ctx.fillStyle="#1675ed";ctx.beginPath();ctx.arc(0,0,28,0,7);ctx.fill();
+   ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(10,-6,15,19,0,0,7);ctx.fill();ctx.fillStyle="#111";ctx.beginPath();ctx.arc(15,-9,4,0,7);ctx.fill();
+   ctx.fillStyle="#e43c32";ctx.beginPath();ctx.roundRect(-20,20,19,11,5);ctx.roundRect(5,20,19,11,5);ctx.fill();
+   ctx.fillStyle="#fff";ctx.fillRect(-24,11,24,6);ctx.fillRect(2,11,24,6);
+ }else{
+   const body=["#ff7f0e","#0d7f42","#1f55d7","#2f7de1","#f7d21b","#8b4b2b","#111","#4a7bff","#a44de0","#7b4cff"][heroIndex];
+   ctx.fillStyle=body;ctx.beginPath();ctx.arc(0,0,27,0,7);ctx.fill();
+   ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(9,-8,12,0,7);ctx.fill();ctx.fillStyle="#111";ctx.beginPath();ctx.arc(12,-8,3,0,7);ctx.fill();
+   ctx.fillStyle="#fff";ctx.fillRect(-25,17,20,8);ctx.fillRect(5,17,20,8);
+ }
+ ctx.restore();
+ // nameplate
+ ctx.fillStyle="rgba(0,0,0,.5)";ctx.fillRect(x-45,y-67,90,20);
+ ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(h.name,x,y-52);ctx.textAlign="left";
 }
+function updateHud(){
+ const h=HEROES[heroIndex];
+ info.innerHTML=`<b>${h.name}</b> — ${h.power}<br>Score: ${score.toLocaleString()} &nbsp; Rings: ${ringCount} &nbsp; Boost: ${Math.round(p.boost)}%<br><span style="opacity:.75">${h.desc}</span>`;
 }
-// Draw Sky Backdrop
-let sky = ctx.createLinearGradient(0,0,0, canvas.height);
-sky.addColorStop(0, currentDifficulty === "scary" ? "#1a0000" : "#0c4a6e"); sky.addColorStop(1, "#050508");
-ctx.fillStyle = sky; ctx.fillRect(0,0, canvas.width, canvas.height);
-// Draw Checkered Loop Ground track
-ctx.fillStyle = currentDifficulty === "scary" ? "#3f0000" : "#b45309"; ctx.fillRect(0, 340, canvas.width, 140);
-ctx.fillStyle = currentDifficulty === "scary" ? "#110000" : "#15803d"; ctx.fillRect(0, 340, canvas.width, 16);
-// Draw properly rendered Sonic Shape Character
-let bodyColor = currentDifficulty === "scary" ? "#000000" : chosenCharacter.primary;
-let bootColor = currentDifficulty === "scary" ? "#ff0000" : chosenCharacter.secondary;
-if (player.form === "hyper") bodyColor = hsl(${Date.now() % 360}, 100%, 70%);
-drawSonicSprite(player.x, player.y, bodyColor, bootColor, player.form === "hyper");
-if(player.form === "shield") { ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(player.x+18, player.y+24, 30, 0, Math.PI*2); ctx.stroke(); }
-// Render Eggman Boss Craft
-boss.floatOffset += 0.05; let bY = boss.y + (Math.sin(boss.floatOffset) * 12);
-ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(640, bY, 26, 0, Math.PI*2); ctx.fill(); // Eggmobile capsule hull
-ctx.fillStyle = "#94a3b8"; ctx.fillRect(610, bY, 60, 16); // Metal canopy rims
-// Collisions loops logic checks
-trackRings.forEach(r => {
-if(appState === "play") r.x -= globalGameSpeed; if(r.x < -20) r.x = canvas.width + 200;
-if(r.active && Math.abs(player.x - r.x) < 30 && Math.abs(player.y - r.y) < 40) { r.active = false; rings++; score += 100; playBeep(600, "sine", 0.05); }
-if(r.active) { ctx.fillStyle = "#eab308"; ctx.beginPath(); ctx.arc(r.x, r.y, 8, 0, Math.PI2); ctx.fill(); }
-});
-trackObstacles.forEach(o => {
-if(appState === "play") o.x -= globalGameSpeed; if(o.x < -20) o.x = canvas.width + 300;
-if(Math.abs(player.x - o.x) < 24 && Math.abs(player.y - o.y) < 40) { o.x = canvas.width + 400; if(player.form !== "shield" && player.form !== "hyper") rings = 0; playBeep(150, "triangle", 0.2); }
-ctx.fillStyle = "#475569"; ctx.fillRect(o.x, o.y, 24, 24);
-});
-debrisArray.forEach((d, i) => {
-d.x += d.vx; ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(d.x, d.y, 6, 0, Math.PI2); ctx.fill();
-if(d.x > 620 && Math.abs(d.y - bY) < 40) { boss.hp -= 10; score += 1000; debrisArray.splice(i, 1); playBeep(700, "square", 0.05); }
-});
-document.getElementById("hud-rings").textContent = rings;
-document.getElementById("hud-score").textContent = score;
-document.getElementById("hud-speed").textContent = ${Math.floor(globalGameSpeed * 5)} mph;
-requestAnimationFrame(updateEngine);
-}
-updateEngine();
+
+function showMessage(big,small){msgBig.textContent=big;msgSmall.textContent=small;msg.style.display=big?"block":"none"}
+
+reset();
+let last=performance.now();
+function loop(now){const dt=Math.min(.032,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>'''
+path=Path("/mnt/data/sonic_cartoon_heroes_game.html")
+path.write_text(html, encoding="utf-8")
+print(path)
