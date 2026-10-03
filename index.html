@@ -311,28 +311,22 @@
             ctx.fillStyle = "rgba(0,0,0,0.3)";
             ctx.beginPath(); ctx.ellipse(player.x + 16, gravityDirection === 1 ? 342 : 56, 16, 5, 0, 0, Math.PI*2); ctx.fill();
             if (player.form === "hyper") { ctx.shadowBlur = 20; ctx.shadowColor = `hsl(${Date.now() % 360}, 100%, 60%)`; }
-            
-            // Core Rendering Engine: Draws detailed character mapping shapes instead of a rectangle
             ctx.fillStyle = currentDifficulty === "scary" ? "#000000" : customColors.fur;
-            // Draw Head Spikes & Torso
             ctx.fillRect(player.x, player.y + 10, player.width, player.height - 18);
             ctx.beginPath();
             ctx.moveTo(player.x, player.y + 12);
-ctx.lineTo(player.x - 12, player.y + 18);
-ctx.lineTo(player.x, player.y + 24);
-ctx.moveTo(player.x, player.y + 22);
+            ctx.lineTo(player.x - 12, player.y + 18);
+            ctx.lineTo(player.x, player.y + 24);
+            ctx.moveTo(player.x, player.y + 22);
 ctx.lineTo(player.x - 10, player.y + 30);
 ctx.lineTo(player.x, player.y + 36);
 ctx.fill();
-// Draw Character Chest Accent Overlay Map
 ctx.fillStyle = currentDifficulty === "scary" ? "#000000" : customColors.accent;
 ctx.fillRect(player.x + 4, player.y + 16, 18, 18);
-// Draw Running Shoe Models
 ctx.fillStyle = currentDifficulty === "scary" ? "#ff0000" : customColors.shoes;
 ctx.fillRect(player.x - 4, player.y + (gravityDirection === 1 ? 40 : -2), 38, 10);
 ctx.fillStyle = "#ffffff";
-ctx.fillRect(player.x + 8, player.y + (gravityDirection === 1 ? 40 : -2), 8, 10); // Shoe buckle stripe
-// Face Details: Heroic Green Eyes Setup
+ctx.fillRect(player.x + 8, player.y + (gravityDirection === 1 ? 40 : -2), 8, 10);
 ctx.fillStyle = currentDifficulty === "scary" ? "#ff0000" : "#059669";
 ctx.fillRect(player.x + 22, player.y + 4, 6, 10);
 ctx.fillStyle = "#000000";
