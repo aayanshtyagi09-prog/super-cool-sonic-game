@@ -1,364 +1,790 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Ultimate Mod Chaos</title>
+<meta charset="utf-8">
+<title>Ultimate Mod Chaos 3D</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-html,body{margin:0;overflow:hidden;background:#07101d;color:white;font-family:Arial}
+html,body{margin:0;height:100%;overflow:hidden;background:#07111e}
 canvas{display:block}
 #ui{
- position:fixed;top:12px;left:12px;z-index:5;
- font-weight:bold;font-size:18px;
- text-shadow:2px 2px #000;line-height:1.5
+ position:fixed;left:15px;top:15px;z-index:10;
+ color:white;font:700 18px Arial;
+ text-shadow:2px 2px 3px #000;line-height:1.55
 }
 #help{
- position:fixed;right:12px;bottom:12px;z-index:5;
- text-align:right;text-shadow:2px 2px #000
+ position:fixed;right:15px;bottom:15px;z-index:10;
+ color:white;font:15px Arial;text-align:right;
+ text-shadow:2px 2px 3px #000
 }
 #boss{
- position:fixed;top:15px;left:25%;width:50%;height:22px;
- border:2px solid white;background:#222;display:none;z-index:5
+ display:none;position:fixed;left:25%;top:18px;
+ width:50%;height:20px;border:2px solid white;
+ background:#222;z-index:10
 }
-#bossHP{height:100%;background:#9b35ff;width:100%}
+#bossFill{height:100%;width:100%;background:#9b42ff}
 #message{
- position:fixed;top:45%;width:100%;text-align:center;
- font-size:34px;font-weight:bold;text-shadow:3px 3px #000;
- pointer-events:none;z-index:6
+ position:fixed;left:0;right:0;top:45%;z-index:20;
+ text-align:center;color:white;font:bold 34px Arial;
+ text-shadow:3px 3px 5px #000;pointer-events:none
 }
 </style>
 </head>
-
 <body>
-<canvas id="game"></canvas>
 
 <div id="ui">
 ⚡ Speed: <span id="speed">0</span><br>
 💍 Rings: <span id="rings">0</span><br>
 ❤️ HP: <span id="hp">100</span><br>
 🏆 Score: <span id="score">0</span><br>
-🌟 Form: <span id="form">Normal</span>
+🌟 Form: <span id="form">Normal</span><br>
+🟡 Verity: Friendly
 </div>
 
-<div id="boss"><div id="bossHP"></div></div>
-
+<div id="boss"><div id="bossFill"></div></div>
 <div id="message"></div>
 
 <div id="help">
-A/D or ←/→ = Move<br>
-W / Space = Jump<br>
-Shift = Boost<br>
-E = Attack<br>
-1 = Super Sonic<br>
-2 = Hyper Sonic<br>
-R = Restart
+A/D or ←/→ Move<br>
+W / Space Jump<br>
+Shift Boost<br>
+E Attack<br>
+1 Super Sonic<br>
+2 Hyper Sonic<br>
+R Restart
 </div>
 
-<script>
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
+<script type="module">
 
-function resize(){
- canvas.width=innerWidth;
- canvas.height=innerHeight;
+import * as THREE
+from "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js";
+
+const scene=new THREE.Scene();
+
+scene.background=new THREE.Color(0x72c9ff);
+scene.fog=new THREE.Fog(0x72c9ff,80,500);
+
+const camera=new THREE.PerspectiveCamera(
+ 70,
+ innerWidth/innerHeight,
+ .1,
+ 2000
+);
+
+const renderer=new THREE.WebGLRenderer({
+ antialias:true
+});
+
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
+document.body.appendChild(renderer.domElement);
+
+/* LIGHTING */
+
+const sun=new THREE.DirectionalLight(
+ 0xffffff,
+ 3
+);
+
+sun.position.set(
+ 100,
+ 180,
+ 100
+);
+
+sun.castShadow=true;
+
+scene.add(sun);
+
+scene.add(
+ new THREE.HemisphereLight(
+  0x9edcff,
+  0x385020,
+  1.5
+ )
+);
+
+/* WORLD */
+
+const groundMat=new THREE.MeshStandardMaterial({
+ color:0x4f873d,
+ roughness:.9
+});
+
+const ground=new THREE.Mesh(
+ new THREE.BoxGeometry(
+  2000,
+  10,
+  80
+ ),
+ groundMat
+);
+
+ground.position.set(
+ 800,
+ -5,
+ 0
+);
+
+ground.receiveShadow=true;
+
+scene.add(ground);
+
+/* BLOCK TERRAIN */
+
+for(let i=0;i<150;i++){
+
+ const height=
+  2+
+  Math.floor(Math.random()*8);
+
+ const mat=
+  new THREE.MeshStandardMaterial({
+   color:
+    i%3===0
+    ?0x679b45
+    :0x4d783a
+  });
+
+ const block=
+  new THREE.Mesh(
+   new THREE.BoxGeometry(
+    5+Math.random()*4,
+    height,
+    12
+   ),
+   mat
+  );
+
+ block.position.set(
+  15+i*12,
+  height/2-0.1,
+  0
+ );
+
+ block.castShadow=true;
+ block.receiveShadow=true;
+
+ scene.add(block);
 }
-resize();
-addEventListener("resize",resize);
+
+/* PLAYER */
+
+const player=new THREE.Group();
+
+scene.add(player);
+
+const bodyMat=
+ new THREE.MeshStandardMaterial({
+  color:0x168cff,
+  roughness:.45
+ });
+
+const body=
+ new THREE.Mesh(
+  new THREE.SphereGeometry(
+   1.25,
+   32,
+   20
+  ),
+  bodyMat
+ );
+
+body.scale.set(
+ .95,
+ 1.05,
+ .85
+ );
+
+body.castShadow=true;
+
+player.add(body);
+
+/* nose */
+
+const nose=
+ new THREE.Mesh(
+  new THREE.SphereGeometry(
+   .28,
+   16,
+   16
+  ),
+  new THREE.MeshStandardMaterial({
+   color:0x197cff
+  })
+ );
+
+nose.position.set(
+ 0,
+ .15,
+ -1.15
+);
+
+player.add(nose);
+
+/* eyes */
+
+const eyeMat=
+ new THREE.MeshStandardMaterial({
+  color:0xffffff
+ });
+
+const blackMat=
+ new THREE.MeshStandardMaterial({
+  color:0x111111
+ });
+
+for(const x of [-.32,.32]){
+
+ const eye=
+  new THREE.Mesh(
+   new THREE.SphereGeometry(
+    .28,
+    16,
+    16
+   ),
+   eyeMat
+  );
+
+ eye.position.set(
+  x,
+  .48,
+  -.95
+ );
+
+ player.add(eye);
+
+ const pupil=
+  new THREE.Mesh(
+   new THREE.SphereGeometry(
+    .1,
+    12,
+    12
+   ),
+   blackMat
+  );
+
+ pupil.position.set(
+  x,
+  .48,
+  -1.18
+ );
+
+ player.add(pupil);
+}
+
+/* shoes */
+
+const shoeMat=
+ new THREE.MeshStandardMaterial({
+  color:0xe63232
+ });
+
+for(const x of [-.62,.62]){
+
+ const shoe=
+  new THREE.Mesh(
+   new THREE.BoxGeometry(
+    .75,
+    .35,
+    1.25
+   ),
+   shoeMat
+  );
+
+ shoe.position.set(
+   x,
+  -1.15,
+  -.25
+ );
+
+ shoe.castShadow=true;
+
+ player.add(shoe);
+}
+
+player.position.set(
+ 0,
+ 2,
+ 0
+);
+
+/* GAME STATE */
+
+let velocity=0;
+let verticalVelocity=0;
+let grounded=true;
+
+let rings=0;
+let hp=100;
+let score=0;
+
+let form="Normal";
+
+let superMode=false;
+let hyperMode=false;
 
 const keys={};
 
-addEventListener("keydown",e=>{
- keys[e.key.toLowerCase()]=true;
+addEventListener(
+ "keydown",
+ e=>{
+  keys[e.key.toLowerCase()]=true;
 
- if([" ","arrowleft","arrowright"].includes(e.key.toLowerCase()))
-   e.preventDefault();
+  if(e.key==="1")
+   activateSuper();
 
- if(e.key.toLowerCase()==="1")superSonic();
- if(e.key.toLowerCase()==="2")hyperSonic();
- if(e.key.toLowerCase()==="r")location.reload();
-});
+  if(e.key==="2")
+   activateHyper();
 
-addEventListener("keyup",e=>{
- keys[e.key.toLowerCase()]=false;
-});
+  if(e.key.toLowerCase()==="r")
+   location.reload();
+ }
+);
 
-const WORLD_WIDTH=16000;
-const GROUND=540;
+addEventListener(
+ "keyup",
+ e=>{
+  keys[e.key.toLowerCase()]=false;
+ }
+);
 
-let camera=0;
-let darkness=0;
-let eventTimer=900;
-let messageTimer=0;
+/* RINGS */
 
-let player={
- x:200,
- y:450,
- vx:0,
- vy:0,
- radius:24,
- hp:100,
- rings:0,
- score:0,
- grounded:false,
- form:"Normal",
- invincible:false
-};
-
-let blocks=[];
-let rings=[];
-let particles=[];
-let enemies=[];
-let boss=null;
-
-/* Minecraft-style terrain */
-
-for(let i=0;i<220;i++){
- let h=30+Math.random()*130;
-
- blocks.push({
-   x:300+i*75+Math.random()*25,
-   y:GROUND-h,
-   w:55+Math.random()*35,
-   h:h
+const ringMat=
+ new THREE.MeshStandardMaterial({
+  color:0xffd92e,
+  emissive:0x5a4300
  });
+
+const ringObjects=[];
+
+for(let i=0;i<130;i++){
+
+ const ring=
+  new THREE.Mesh(
+   new THREE.TorusGeometry(
+    .45,
+    .09,
+    10,
+    24
+   ),
+   ringMat
+  );
+
+ ring.position.set(
+   15+i*13,
+   3+Math.sin(i)*1.5,
+   0
+ );
+
+ ring.rotation.y=Math.PI/2;
+
+ scene.add(ring);
+
+ ringObjects.push(ring);
 }
 
-/* Rings */
+/* FRIENDLY VERITY */
 
-for(let i=0;i<160;i++){
- rings.push({
-   x:400+i*90+Math.random()*70,
-   y:180+Math.random()*260,
-   taken:false
- });
+const verity=new THREE.Group();
+
+scene.add(verity);
+
+verity.position.set(
+ 20,
+ 1.7,
+ -5
+);
+
+/* original friendly yellow companion */
+
+const verityBody=
+ new THREE.Mesh(
+  new THREE.SphereGeometry(
+   .9,
+   24,
+   16
+  ),
+  new THREE.MeshStandardMaterial({
+   color:0xffd21c
+  })
+ );
+
+verityBody.castShadow=true;
+verity.add(verityBody);
+
+const smile=
+ new THREE.Mesh(
+  new THREE.TorusGeometry(
+   .25,
+   .045,
+   8,
+   20,
+   Math.PI
+  ),
+  new THREE.MeshStandardMaterial({
+   color:0x333333
+  })
+ );
+
+smile.rotation.x=Math.PI/2;
+smile.position.z=-.84;
+smile.position.y=-.15;
+
+verity.add(smile);
+
+/*
+ IMPORTANT:
+ Verity is always friendly.
+ No monster version.
+ No creepy version.
+ No demon.
+ No horror event.
+*/
+
+function activateSuper(){
+
+ if(rings>=50){
+
+  form="Super";
+  superMode=true;
+  hyperMode=false;
+
+  document.getElementById("message")
+   .textContent="🌟 SUPER SONIC!";
+
+  setTimeout(
+   ()=>document.getElementById("message").textContent="",
+   1500
+  );
+
+ }
+
 }
 
-/* Mowzie-style creatures */
+function activateHyper(){
 
-function spawnMowzie(x,type){
- enemies.push({
-   x:x,
-   y:GROUND-60,
-   type:type,
-   hp:type==="Frostmaw"?350:180,
-   max:type==="Frostmaw"?350:180,
-   vx:0,
-   attack:0
- });
+ if(rings>=100){
+
+  form="Hyper";
+  hyperMode=true;
+  superMode=false;
+
+  document.getElementById("message")
+   .textContent="⚡🌟 HYPER SONIC!";
+
+  setTimeout(
+   ()=>document.getElementById("message").textContent="",
+   1500
+  );
+
+ }
+
 }
 
-spawnMowzie(1800,"Frostmaw");
-spawnMowzie(3600,"Wroughtnaut");
-spawnMowzie(5500,"Umvuthi");
-spawnMowzie(7500,"Barako");
+/* MOWZIE-STYLE BOSSES */
 
-/* particles */
+const mobs=[];
 
-function particle(x,y,color,count=10){
+function createMob(
+ name,
+ color,
+ x,
+ size
+){
 
- for(let i=0;i<count;i++){
+ const group=new THREE.Group();
 
-  particles.push({
-   x:x,
-   y:y,
-   vx:(Math.random()-.5)*10,
-   vy:(Math.random()-1)*9,
-   life:45,
-   color:color
+ const mesh=
+  new THREE.Mesh(
+   new THREE.SphereGeometry(
+    size,
+    24,
+    16
+   ),
+   new THREE.MeshStandardMaterial({
+    color
+   })
+  );
+
+ mesh.castShadow=true;
+
+ group.add(mesh);
+
+ group.position.set(
+  x,
+  size,
+  0
+ );
+
+ scene.add(group);
+
+ mobs.push({
+  group,
+  name,
+  hp:300,
+  maxHP:300
+ });
+
+}
+
+createMob(
+ "Frostmaw",
+ 0x72ddff,
+ 900,
+ 3
+);
+
+createMob(
+ "Wroughtnaut",
+ 0x59606c,
+ 1800,
+ 3.5
+);
+
+createMob(
+ "Umvuthi",
+ 0xc98a28,
+ 3000,
+ 3
+);
+
+createMob(
+ "Barako",
+ 0xffc12a,
+ 4300,
+ 3
+);
+
+/* TWISTED WARDEN */
+
+let warden=null;
+
+function createWarden(){
+
+ const group=new THREE.Group();
+
+ const material=
+  new THREE.MeshStandardMaterial({
+   color:0x4c286e,
+   roughness:.55
   });
 
- }
-}
+ const body=
+  new THREE.Mesh(
+   new THREE.BoxGeometry(
+    6,
+    9,
+    5
+   ),
+   material
+  );
 
-/* messages */
+ body.castShadow=true;
 
-function message(text,time=2000){
- document.getElementById("message").innerHTML=text;
- messageTimer=time;
-}
+ group.add(body);
 
-/* forms */
-
-function superSonic(){
-
- if(player.rings>=50){
-
-  player.form="SUPER";
-  player.invincible=true;
-  message("🌟 SUPER SONIC!",1800);
-
- }else{
-
-  message("Need 50 Rings!",1200);
-
- }
-}
-
-function hyperSonic(){
-
- if(player.rings>=100){
-
-  player.form="HYPER";
-  player.invincible=true;
-  message("⚡🌟 HYPER SONIC!",2200);
-
- }else{
-
-  message("Need 100 Rings!",1200);
-
- }
-}
-
-/* Verity event */
-
-function verityEvent(){
-
- message("👁️ VERITY EVENT — THE WORLD CHANGES!",2500);
-
- darkness=35;
-
- particle(
-   player.x+300,
-   250,
-   "#ffd92e",
-   50
+ group.position.set(
+  player.position.x+45,
+  4.5,
+  0
  );
 
-}
+ scene.add(group);
 
-/* Twisted Warden */
-
-function summonWarden(){
-
- boss={
-   x:player.x+1000,
-   y:GROUND-100,
-   hp:1000,
-   max:1000,
-   vx:-2,
-   timer:0
+ warden={
+  group,
+  hp:1000,
+  maxHP:1000
  };
 
- document.getElementById("boss").style.display="block";
+ document.getElementById("boss")
+  .style.display="block";
 
- message(
-   "☠️ TWISTED WARDEN HAS ARRIVED!",
-   3000
- );
 }
 
-/* update */
+/* COMBAT */
 
-function update(){
+function attack(){
 
- let left=keys["a"]||keys["arrowleft"];
- let right=keys["d"]||keys["arrowright"];
+ if(keys["e"]){
 
- let boost=keys["shift"];
+  for(const mob of mobs){
 
- let maxSpeed;
+   const d=
+    player.position.distanceTo(
+     mob.group.position
+    );
 
- if(player.form==="HYPER")
-   maxSpeed=55;
- else if(player.form==="SUPER")
-   maxSpeed=35;
- else
-   maxSpeed=boost?25:12;
+   if(d<8){
 
- if(left)player.vx-=.9;
- if(right)player.vx+=.9;
+    const damage=
+     hyperMode?20:
+     superMode?12:
+     6;
 
- if(!left&&!right)
-   player.vx*=.91;
+    mob.hp-=damage;
+    score++;
 
- player.vx=Math.max(
-   -maxSpeed,
-   Math.min(maxSpeed,player.vx)
- );
+   }
 
- /* jump */
+  }
 
- if(
-   (keys["w"]||keys[" "]) &&
-   player.grounded
- ){
+  if(warden){
 
-   player.vy=-16;
-   player.grounded=false;
+   const d=
+    player.position.distanceTo(
+     warden.group.position
+    );
 
- }
+   if(d<9){
 
- player.vy+=.72;
- player.y+=player.vy;
+    warden.hp-=
+     hyperMode?20:
+     superMode?12:
+     6;
 
- /* terrain */
-
- let terrainHeight=0;
-
- for(const b of blocks){
-
-  if(
-   player.x+player.radius>b.x &&
-   player.x-player.radius<b.x+b.w &&
-   player.y+player.radius>=b.y &&
-   player.y< b.y
-  ){
-
-   terrainHeight=b.h;
-   break;
+   }
 
   }
 
  }
 
- let floor=GROUND-terrainHeight;
+}
 
- if(player.y+player.radius>=floor){
+/* GAME LOOP */
 
-   player.y=floor-player.radius;
-   player.vy=0;
-   player.grounded=true;
+const clock=new THREE.Clock();
 
- }else{
+function animate(){
 
-   player.grounded=false;
+ requestAnimationFrame(animate);
+
+ const dt=Math.min(
+  clock.getDelta(),
+  .033
+ );
+
+ /* movement */
+
+ const left=
+  keys["a"]||
+  keys["arrowleft"];
+
+ const right=
+  keys["d"]||
+  keys["arrowright"];
+
+ const boost=keys["shift"];
+
+ let maxSpeed=
+  hyperMode?1.8:
+  superMode?1.25:
+  boost?1.0:.55;
+
+ if(left)
+  velocity-=.035;
+
+ if(right)
+  velocity+=.035;
+
+ if(!left&&!right)
+  velocity*=.92;
+
+ velocity=
+  THREE.MathUtils.clamp(
+   velocity,
+   -maxSpeed,
+   maxSpeed
+  );
+
+ if(
+  (keys["w"]||
+   keys[" "])&&
+  grounded
+ ){
+
+  verticalVelocity=.32;
+  grounded=false;
 
  }
 
- player.x+=player.vx;
+ verticalVelocity-=.018;
 
- player.x=Math.max(
-   40,
-   Math.min(WORLD_WIDTH-40,player.x)
- );
+ player.position.y+=
+  verticalVelocity;
 
- /* boost trail */
+ if(player.position.y<=1.25){
 
- if(boost && Math.abs(player.vx)>18)
-   particle(player.x-25,player.y,"#44ddff",2);
+  player.position.y=1.25;
+  verticalVelocity=0;
+  grounded=true;
+
+ }
+
+ player.position.x+=
+  velocity*60*dt;
+
+ player.position.x=
+  Math.max(
+   0,
+   Math.min(
+    1900,
+    player.position.x
+   )
+  );
 
  /* rings */
 
- for(const ring of rings){
+ for(const ring of ringObjects){
 
-  if(!ring.taken){
+  if(!ring.visible)
+   continue;
 
-   let d=Math.hypot(
-    ring.x-player.x,
-    ring.y-player.y
+  ring.rotation.x+=.08;
+
+  const d=
+   player.position.distanceTo(
+    ring.position
    );
 
-   if(d<42){
+  if(d<2){
 
-    ring.taken=true;
-    player.rings++;
-    player.score+=10;
+   ring.visible=false;
+   rings++;
+   score+=10;
 
-    particle(
-     ring.x,
-     ring.y,
-     "#ffd92e",
-     12
-    );
+  }
+
+ }
+
+ /* Mowzie bosses */
+
+ for(const mob of mobs){
+
+  if(mob.hp<=0){
+
+   mob.group.visible=false;
+   continue;
+
+  }
+
+  if(mob.group.visible){
+
+   mob.group.rotation.y+=
+    dt*.5;
+
+   const distance=
+    player.position.x-
+    mob.group.position.x;
+
+   if(Math.abs(distance)<30){
+
+    mob.group.position.x+=
+     Math.sign(distance)*.025;
 
    }
 
@@ -366,553 +792,142 @@ function update(){
 
  }
 
- /* Mowzie mobs */
+ /* WARDEN */
 
- for(const enemy of enemies){
+ if(!warden && score>=1500)
+  createWarden();
 
-  let distance=player.x-enemy.x;
+ if(warden){
 
-  enemy.attack++;
+  warden.group.rotation.y+=dt;
 
-  if(Math.abs(distance)<900){
+  const distance=
+   player.position.x-
+   warden.group.position.x;
 
-   enemy.vx=Math.sign(distance)*1.2;
-   enemy.x+=enemy.vx;
+  warden.group.position.x+=
+   Math.sign(distance)*.035;
 
-   if(
-     Math.abs(distance)<90 &&
-     enemy.attack%70===0 &&
-     !player.invincible
-   ){
+  if(
+   Math.abs(distance)<8 &&
+   !superMode &&
+   !hyperMode
+  ){
 
-     player.hp-=10;
-
-   }
-
-   if(
-     keys["e"] &&
-     Math.abs(distance)<130
-   ){
-
-     enemy.hp-=player.form==="HYPER"?25:
-               player.form==="SUPER"?15:8;
-
-     player.score+=2;
-
-     particle(
-      enemy.x,
-      enemy.y,
-      "#ffffff",
-      8
-     );
-
-   }
+   hp-=.2;
 
   }
 
- }
+  if(warden.hp<=0){
 
- enemies=enemies.filter(e=>{
+   score+=10000;
 
-  if(e.hp<=0){
-
-   player.score+=500;
-
-   message(
-    "🏆 "+e.type+" DEFEATED!",
-    1300
+   scene.remove(
+    warden.group
    );
 
-   return false;
-
-  }
-
-  return true;
-
- });
-
- /* Verity timer */
-
- eventTimer--;
-
- if(eventTimer<=0){
-
-  eventTimer=
-    1100+
-    Math.random()*1000;
-
-  verityEvent();
-
- }
-
- if(darkness>0)
-   darkness-=.02;
-
- /* Warden trigger */
-
- if(
-   !boss &&
-   player.score>=1500
- ){
-
-   summonWarden();
-
- }
-
- /* Warden */
-
- if(boss){
-
-  boss.timer++;
-
-  boss.x+=boss.vx;
-
-  if(
-   boss.x<player.x-600 ||
-   boss.x>player.x+1000
-  ){
-
-   boss.vx*=-1;
-
-  }
-
-  /* attack */
-
-  if(
-   Math.random()<.025
-  ){
-
-   particle(
-    boss.x,
-    boss.y,
-    "#a43cff",
-    25
-   );
-
-  }
-
-  /* player attack */
-
-  if(
-   keys["e"] &&
-   Math.abs(player.x-boss.x)<170
-  ){
-
-   let damage=
-    player.form==="HYPER"?12:
-    player.form==="SUPER"?8:4;
-
-   boss.hp-=damage;
-   player.score++;
-
-  }
-
-  /* boss damage */
-
-  if(
-   Math.abs(player.x-boss.x)<100 &&
-   boss.timer%50===0 &&
-   !player.invincible
-  ){
-
-   player.hp-=15;
-
-  }
-
-  if(boss.hp<=0){
-
-   player.score+=10000;
-
-   message(
-    "🏆 TWISTED WARDEN DEFEATED!",
-    4000
-   );
-
-   boss=null;
+   warden=null;
 
    document.getElementById("boss")
-     .style.display="none";
+    .style.display="none";
+
+   document.getElementById("message")
+    .textContent=
+    "🏆 TWISTED WARDEN DEFEATED!";
 
   }
 
  }
 
- /* particles */
+ attack();
 
- for(const p of particles){
+ /* Verity follows peacefully */
 
-  p.x+=p.vx;
-  p.y+=p.vy;
-  p.vy+=.25;
-  p.life--;
+ verity.position.x=
+  player.position.x+5;
 
- }
+ verity.position.y=
+  1.7+
+  Math.sin(
+   performance.now()*.002
+  )*.2;
 
- particles=particles.filter(p=>p.life>0);
+ /* camera */
+
+ camera.position.x=
+  player.position.x-12;
+
+ camera.position.y=
+  7;
+
+ camera.position.z=
+  15;
+
+ camera.lookAt(
+  player.position.x+8,
+  2,
+  0
+ );
 
  /* UI */
 
  document.getElementById("speed")
-   .textContent=Math.round(Math.abs(player.vx)*100);
+  .textContent=
+   Math.round(
+    Math.abs(velocity)*100
+   );
 
  document.getElementById("rings")
-   .textContent=player.rings;
+  .textContent=rings;
 
  document.getElementById("hp")
-   .textContent=Math.max(0,Math.round(player.hp));
+  .textContent=Math.max(
+   0,
+   Math.round(hp)
+  );
 
  document.getElementById("score")
-   .textContent=player.score;
+  .textContent=score;
 
  document.getElementById("form")
-   .textContent=player.form;
+  .textContent=form;
 
- if(boss){
+ if(warden){
 
-  document.getElementById("bossHP")
+  document.getElementById("bossFill")
    .style.width=
-   (boss.hp/boss.max*100)+"%";
-
- }
-
- if(player.hp<=0){
-
-  message(
-   "💥 GAME OVER — PRESS R TO RESTART",
-   999999
-  );
-
- }
-
- if(messageTimer<999999)
-   messageTimer-=16;
-
- if(messageTimer<=0)
-   document.getElementById("message").innerHTML="";
-
- camera+=(player.x-camera-300)*.08;
-}
-
-/* draw */
-
-function draw(){
-
- ctx.clearRect(
-  0,0,
-  canvas.width,
-  canvas.height
- );
-
- /* sky */
-
- let gradient=
-   ctx.createLinearGradient(
-    0,0,
-    0,canvas.height
-   );
-
- gradient.addColorStop(
-  0,
-  player.form==="HYPER"
-   ? "#24145c"
-   : "#071c38"
- );
-
- gradient.addColorStop(
-  1,
-  "#163b24"
- );
-
- ctx.fillStyle=gradient;
- ctx.fillRect(
-  0,0,
-  canvas.width,
-  canvas.height
- );
-
- /* distant mountains */
-
- ctx.fillStyle="#163247";
-
- for(let i=-3;i<15;i++){
-
-  let xx=
-   i*220-
-   (camera*.25%220);
-
-  ctx.beginPath();
-
-  ctx.moveTo(xx,GROUND);
-  ctx.lineTo(xx+110,290);
-  ctx.lineTo(xx+240,GROUND);
-
-  ctx.fill();
-
- }
-
- /* Minecraft blocks */
-
- for(const b of blocks){
-
-  let sx=b.x-camera;
-
-  if(sx<-100||sx>canvas.width+100)
-    continue;
-
-  ctx.fillStyle="#536f3d";
-
-  ctx.fillRect(
-   sx,
-   b.y,
-   b.w,
-   b.h
-  );
-
-  ctx.fillStyle="#789957";
-
-  ctx.fillRect(
-   sx,
-   b.y,
-   b.w,
-   8
-  );
-
-  ctx.strokeStyle="#263a22";
-
-  ctx.strokeRect(
-   sx,
-   b.y,
-   b.w,
-   b.h
-  );
-
- }
-
- /* rings */
-
- for(const ring of rings){
-
-  if(ring.taken)
-    continue;
-
-  let sx=ring.x-camera;
-
-  if(sx>-30&&sx<canvas.width+30){
-
-   ctx.strokeStyle="#ffd92e";
-   ctx.lineWidth=5;
-
-   ctx.beginPath();
-
-   ctx.arc(
-    sx,
-    ring.y,
-    13,
+   Math.max(
     0,
-    Math.PI*2
-   );
-
-   ctx.stroke();
-
-  }
+    warden.hp/
+    warden.maxHP*100
+   )+"%";
 
  }
 
- /* mobs */
-
- for(const e of enemies){
-
-  let sx=e.x-camera;
-  let sy=e.y;
-
-  ctx.fillStyle=
-   e.type==="Frostmaw"
-   ? "#83dfff"
-   : "#55335f";
-
-  ctx.beginPath();
-
-  ctx.arc(
-   sx,
-   sy,
-   e.type==="Frostmaw"?55:45,
-   0,
-   Math.PI*2
-  );
-
-  ctx.fill();
-
-  ctx.fillStyle="#fff";
-
-  ctx.beginPath();
-
-  ctx.arc(sx-15,sy-10,7,0,7);
-  ctx.arc(sx+15,sy-10,7,0,7);
-
-  ctx.fill();
-
- }
-
- /* warden */
-
- if(boss){
-
-  let sx=boss.x-camera;
-  let sy=boss.y;
-
-  ctx.fillStyle="#342040";
-
-  ctx.beginPath();
-
-  ctx.arc(
-   sx,
-   sy,
-   75,
-   0,
-   Math.PI*2
-  );
-
-  ctx.fill();
-
-  ctx.strokeStyle="#a95aff";
-  ctx.lineWidth=7;
-
-  ctx.stroke();
-
-  ctx.fillStyle="#c66cff";
-
-  ctx.fillRect(
-   sx-38,
-   sy+10,
-   76,
-   13
-  );
-
- }
-
- /* Sonic */
-
- let px=player.x-camera;
- let py=player.y;
-
- ctx.save();
-
- ctx.translate(px,py);
-
- ctx.rotate(player.vx*.025);
-
- if(player.form==="SUPER")
-   ctx.shadowBlur=35;
-
- if(player.form==="HYPER")
-   ctx.shadowBlur=55;
-
- ctx.shadowColor=
-   player.form==="HYPER"
-   ? "#ffffff"
-   : "#44ddff";
-
- ctx.fillStyle=
-   player.form==="SUPER"
-   ? "#ffd92e"
-   : player.form==="HYPER"
-   ? "#ffffff"
-   : "#168cff";
-
- ctx.beginPath();
-
- ctx.arc(
-  0,
-  0,
-  24,
-  0,
-  Math.PI*2
+ renderer.render(
+  scene,
+  camera
  );
 
- ctx.fill();
-
- ctx.shadowBlur=0;
-
- /* eyes */
-
- ctx.fillStyle="white";
-
- ctx.beginPath();
-
- ctx.arc(9,-8,8,0,7);
-
- ctx.fill();
-
- ctx.fillStyle="#111";
-
- ctx.beginPath();
-
- ctx.arc(11,-8,3,0,7);
-
- ctx.fill();
-
- /* shoes */
-
- ctx.fillStyle="#e53935";
-
- ctx.fillRect(-22,16,19,8);
- ctx.fillRect(4,16,19,8);
-
- ctx.restore();
-
- /* particles */
-
- for(const p of particles){
-
-  ctx.globalAlpha=
-   p.life/45;
-
-  ctx.fillStyle=p.color;
-
-  ctx.fillRect(
-   p.x-camera,
-   p.y,
-   6,
-   6
-  );
-
- }
-
- ctx.globalAlpha=1;
-
- /* darkness */
-
- if(darkness>0){
-
-  ctx.fillStyle=
-   "rgba(5,0,20,"+
-   Math.min(.35,darkness/100)+")";
-
-  ctx.fillRect(
-   0,0,
-   canvas.width,
-   canvas.height
-  );
-
- }
-
 }
 
-function loop(){
+addEventListener(
+ "resize",
+ ()=>{
+  camera.aspect=
+   innerWidth/innerHeight;
 
- update();
- draw();
+  camera.updateProjectionMatrix();
 
- requestAnimationFrame(loop);
-
-}
-
-message(
- "🌎 ULTIMATE MOD CHAOS — GO!",
- 3000
+  renderer.setSize(
+   innerWidth,
+   innerHeight
+  );
+ }
 );
 
-loop();
+animate();
+
 </script>
 </body>
 </html>
