@@ -1,666 +1,267 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Ultra Sonic Adventure</title>
+<title>Roblox Mega World</title>
 <style>
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#06101d;font-family:Arial,sans-serif}
+html,body{margin:0;overflow:hidden;background:#111;font-family:Arial}
 canvas{display:block}
 #ui{
- position:fixed;top:15px;left:15px;z-index:5;color:white;
- background:rgba(0,0,0,.55);padding:14px 18px;border-radius:14px;
- border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(8px);
- line-height:1.55;min-width:210px
+ position:fixed;top:15px;left:15px;color:white;
+ background:rgba(0,0,0,.65);padding:14px;border-radius:10px;
+ font-size:18px;line-height:1.5
 }
-#title{font-size:22px;font-weight:bold}
-#hint{font-size:13px;opacity:.8}
-#boss{
- position:fixed;top:18px;left:50%;transform:translateX(-50%);
- width:420px;height:18px;background:#250909;border:2px solid white;
- border-radius:20px;display:none;overflow:hidden;z-index:5
-}
-#bossFill{height:100%;width:100%;background:#d22}
-#flash{
- position:fixed;inset:0;background:white;opacity:0;pointer-events:none;
- z-index:10;transition:opacity .15s
+#msg{
+ position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
+ color:white;background:rgba(0,0,0,.7);padding:12px 22px;
+ border-radius:10px;font-size:20px
 }
 </style>
 </head>
 <body>
-
 <div id="ui">
- <div id="title">⚡ ULTRA SONIC ADVENTURE</div>
- <div id="stats"></div>
- <div id="hint">
- A/D or ←/→ Move<br>
- W / Space Jump<br>
- Shift Boost<br>
- E Attack<br>
- 1 Super Sonic<br>
- 2 Hyper Sonic<br>
- R Restart
- </div>
+💰 Coins: <span id="coins">0</span><br>
+🍔 Burgers: <span id="burgers">0</span>/10<br>
+💨 Speed: <span id="speed">1</span>x<br>
+🎮 World: <span id="world">MEGA HUB</span>
 </div>
+<div id="msg">WASD = Move | SHIFT = Boost | SPACE = Jump</div>
 
-<div id="boss"><div id="bossFill"></div></div>
-<div id="flash"></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
+<script>
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x78b9ff);
 
-<script type="module">
-import * as THREE from
-"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js";
-
-/* ---------- SCENE ---------- */
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x74cfff);
-scene.fog = new THREE.Fog(0x74cfff,90,700);
-
-const camera = new THREE.PerspectiveCamera(
- 70, innerWidth/innerHeight, .1, 2000
+const camera=new THREE.PerspectiveCamera(
+ 75,innerWidth/innerHeight,.1,2000
 );
+camera.position.set(0,8,14);
 
-const renderer = new THREE.WebGLRenderer({
- antialias:true,
- powerPreference:"high-performance"
-});
-
+const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-renderer.outputColorSpace=THREE.SRGBColorSpace;
 document.body.appendChild(renderer.domElement);
 
-/* ---------- LIGHTING ---------- */
+scene.add(new THREE.HemisphereLight(0xffffff,0x555555,2));
 
-const hemi = new THREE.HemisphereLight(0xbde8ff,0x284020,2.2);
-scene.add(hemi);
-
-const sun = new THREE.DirectionalLight(0xffffff,3);
-sun.position.set(-100,180,100);
+const sun=new THREE.DirectionalLight(0xffffff,2);
+sun.position.set(30,60,20);
 sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);
 scene.add(sun);
 
-/* ---------- MATERIALS ---------- */
+const player=new THREE.Group();
 
-const grassMat=new THREE.MeshStandardMaterial({
- color:0x36a852,roughness:.9
-});
-
-const dirtMat=new THREE.MeshStandardMaterial({
- color:0x80522d,roughness:1
-});
-
-const stoneMat=new THREE.MeshStandardMaterial({
- color:0x687080,roughness:.8
-});
-
-const ringMat=new THREE.MeshStandardMaterial({
- color:0xffd21f,
- metalness:.9,
- roughness:.18,
- emissive:0xff8c00,
- emissiveIntensity:.5
-});
-
-/* ---------- WORLD ---------- */
-
-const ground = new THREE.Mesh(
- new THREE.BoxGeometry(2600,4,180),
- grassMat
+const body=new THREE.Mesh(
+ new THREE.BoxGeometry(2,2.4,1),
+ new THREE.MeshStandardMaterial({color:0x1877f2})
 );
+body.position.y=2.2;
+body.castShadow=true;
+player.add(body);
 
-ground.position.set(0,-2,0);
+const head=new THREE.Mesh(
+ new THREE.BoxGeometry(2,2,2),
+ new THREE.MeshStandardMaterial({color:0xffc58a})
+);
+head.position.y=4.4;
+head.castShadow=true;
+player.add(head);
+
+function limb(x,y,z){
+ const m=new THREE.Mesh(
+  new THREE.BoxGeometry(.65,2,.65),
+  new THREE.MeshStandardMaterial({color:0xffc58a})
+ );
+ m.position.set(x,y,z);
+ m.castShadow=true;
+ player.add(m);
+}
+limb(-1.3,1.4,0);
+limb(1.3,1.4,0);
+
+const leg1=new THREE.Mesh(
+ new THREE.BoxGeometry(.75,2,.75),
+ new THREE.MeshStandardMaterial({color:0x222222})
+);
+leg1.position.set(-.55,.4,0);
+player.add(leg1);
+
+const leg2=leg1.clone();
+leg2.position.x=.55;
+player.add(leg2);
+
+player.position.set(0,0,0);
+scene.add(player);
+
+const ground=new THREE.Mesh(
+ new THREE.BoxGeometry(500,1,500),
+ new THREE.MeshStandardMaterial({color:0x55aa55})
+);
+ground.position.y=-.5;
 ground.receiveShadow=true;
 scene.add(ground);
 
-for(let x=-1200;x<1200;x+=14){
- for(let z=-70;z<70;z+=14){
-   if(Math.random()<.18) continue;
-
-   const h=2+Math.random()*12;
-
-   const block=new THREE.Mesh(
-    new THREE.BoxGeometry(13,h,13),
-    Math.random()<.7?grassMat:dirtMat
-   );
-
-   block.position.set(
-    x+Math.random()*3,
-    h/2-1,
-    z+Math.random()*3
-   );
-
-   block.castShadow=true;
-   block.receiveShadow=true;
-   scene.add(block);
- }
-}
-
-/* ---------- DECORATION ---------- */
-
-function tree(x,z){
- const trunk=new THREE.Mesh(
-  new THREE.CylinderGeometry(1.2,1.5,10,8),
-  new THREE.MeshStandardMaterial({color:0x70401f})
- );
- trunk.position.set(x,5,z);
- trunk.castShadow=true;
- scene.add(trunk);
-
- for(let i=0;i<3;i++){
-  const leaf=new THREE.Mesh(
-   new THREE.SphereGeometry(4.5,10,8),
-   new THREE.MeshStandardMaterial({color:0x16833d})
-  );
-  leaf.position.set(
-   x+(Math.random()-.5)*3,
-   9+i*2,
-   z+(Math.random()-.5)*3
-  );
-  leaf.castShadow=true;
-  scene.add(leaf);
- }
-}
-
-for(let i=0;i<90;i++)
- tree(
-  (Math.random()-.5)*2200,
-  (Math.random()-.5)*130
- );
-
-/* ---------- RINGS ---------- */
-
-const rings=[];
-
-function makeRing(x,y,z){
- const ring=new THREE.Mesh(
-  new THREE.TorusGeometry(1.1,.25,12,32),
-  ringMat
- );
-
- ring.position.set(x,y,z);
- ring.rotation.x=Math.PI/2;
- ring.castShadow=true;
-
- scene.add(ring);
- rings.push(ring);
-}
-
-for(let i=0;i<180;i++){
- makeRing(
-  -1000+i*11,
-  3+Math.sin(i*.5)*2,
-  Math.sin(i*.8)*25
- );
-}
-
-/* ---------- SONIC ---------- */
-
-const sonic=new THREE.Group();
-scene.add(sonic);
-
-const blue=new THREE.MeshStandardMaterial({
- color:0x1265e8,
- roughness:.35,
- metalness:.1
+const keys={};
+addEventListener("keydown",e=>{
+ keys[e.code]=true;
+ if(e.code==="Space" && player.position.y<=.05)
+   velocityY=.32;
 });
+addEventListener("keyup",e=>keys[e.code]=false);
 
-const white=new THREE.MeshStandardMaterial({
- color:0xffffff,
- roughness:.35
-});
+let velocityY=0;
+let coins=0;
+let burgerCount=0;
+let world="MEGA HUB";
+let speedBoost=1;
 
-const red=new THREE.MeshStandardMaterial({
- color:0xd71919,
- roughness:.3
-});
+const burgers=[];
 
-/* body */
-const body=new THREE.Mesh(
- new THREE.SphereGeometry(2.4,32,24),
- blue
-);
-body.scale.set(.9,1.2,.8);
-body.castShadow=true;
-sonic.add(body);
+function makeBurger(x,y,z){
+ const g=new THREE.Group();
 
-/* head */
-const head=new THREE.Mesh(
- new THREE.SphereGeometry(2.65,32,24),
- blue
-);
-head.position.y=2.4;
-head.scale.set(1,.95,.9);
-head.castShadow=true;
-sonic.add(head);
-
-/* ears */
-for(const x of [-1.25,1.25]){
- const ear=new THREE.Mesh(
-  new THREE.ConeGeometry(.65,1.5,16),
-  blue
+ const bun=new THREE.Mesh(
+  new THREE.SphereGeometry(.8,.16,8),
+  new THREE.MeshStandardMaterial({color:0xd88922})
  );
- ear.position.set(x,4.35,0);
- ear.rotation.z=x<0?.35:-.35;
- sonic.add(ear);
+ bun.scale.y=.45;
+
+ const meat=new THREE.Mesh(
+  new THREE.BoxGeometry(1.2,.25,.8),
+  new THREE.MeshStandardMaterial({color:0x54200e})
+ );
+ meat.position.y=-.15;
+
+ const cheese=new THREE.Mesh(
+  new THREE.BoxGeometry(1.3,.12,.9),
+  new THREE.MeshStandardMaterial({color:0xffd51f})
+ );
+ cheese.position.y=.02;
+
+ g.add(bun,meat,cheese);
+ g.position.set(x,y,z);
+ scene.add(g);
+ burgers.push(g);
 }
 
-/* eyes */
-for(const x of [-.55,.55]){
- const eye=new THREE.Mesh(
-  new THREE.SphereGeometry(.65,20,16),
-  white
+for(let i=0;i<10;i++){
+ makeBurger(
+  (Math.random()-.5)*100,
+  1,
+  (Math.random()-.5)*100
  );
- eye.scale.z=.45;
- eye.position.set(x,2.8,2.35);
- sonic.add(eye);
 }
 
-/* nose */
-const nose=new THREE.Mesh(
- new THREE.SphereGeometry(.38,16,12),
- new THREE.MeshStandardMaterial({color:0x101010})
-);
-nose.position.set(0,2.35,2.85);
-sonic.add(nose);
+const portals=[];
 
-/* gloves */
-for(const x of [-2.25,2.25]){
- const glove=new THREE.Mesh(
-  new THREE.SphereGeometry(.72,20,16),
-  white
- );
- glove.position.set(x,.2,0);
- glove.castShadow=true;
- sonic.add(glove);
-}
-
-/* shoes */
-for(const x of [-1.25,1.25]){
- const shoe=new THREE.Mesh(
-  new THREE.BoxGeometry(1.7,.7,2.8),
-  red
- );
- shoe.position.set(x,-2.1,.35);
- shoe.castShadow=true;
- sonic.add(shoe);
-}
-
-sonic.position.set(-80,4,0);
-
-/* ---------- VERITY ---------- */
-
-const verity=new THREE.Group();
-scene.add(verity);
-
-const verityBody=new THREE.Mesh(
- new THREE.SphereGeometry(1.5,24,18),
- new THREE.MeshStandardMaterial({
-  color:0xffd43b,
-  roughness:.5
- })
-);
-
-verityBody.position.y=2;
-verity.add(verityBody);
-
-const smile=new THREE.Mesh(
- new THREE.TorusGeometry(.45,.09,8,20,Math.PI),
- new THREE.MeshStandardMaterial({color:0x5a2500})
-);
-
-smile.position.set(0,1.8,1.38);
-smile.rotation.x=Math.PI/2;
-verity.add(smile);
-
-verity.position.set(-86,2,4);
-
-/* ---------- BOSSES ---------- */
-
-let boss=null;
-let bossHP=1000;
-let bossActive=false;
-
-function spawnBoss(){
-
- if(bossActive)return;
-
- bossActive=true;
-
- boss=new THREE.Group();
-
- const armor=new THREE.MeshStandardMaterial({
-  color:0x3d4352,
-  metalness:.8,
-  roughness:.28
- });
-
- const core=new THREE.Mesh(
-  new THREE.SphereGeometry(6,32,24),
-  armor
- );
-
- core.position.y=6;
- core.castShadow=true;
- boss.add(core);
-
- const eye=new THREE.Mesh(
-  new THREE.SphereGeometry(1.1,20,16),
+function portal(x,z,color,name){
+ const p=new THREE.Mesh(
+  new THREE.TorusGeometry(5,.7,16,40),
   new THREE.MeshStandardMaterial({
-   color:0xff2222,
-   emissive:0xff0000,
-   emissiveIntensity:2
+   color,
+   emissive:color,
+   emissiveIntensity:1
   })
  );
-
- eye.position.set(0,7,5.5);
- boss.add(eye);
-
- for(let i=0;i<4;i++){
-  const spike=new THREE.Mesh(
-   new THREE.ConeGeometry(1,4,12),
-   armor
-  );
-  spike.position.set(
-   Math.cos(i*Math.PI/2)*5,
-   6,
-   Math.sin(i*Math.PI/2)*5
-  );
-  spike.rotation.z=Math.PI/2;
-  boss.add(spike);
- }
-
- boss.position.set(120,0,0);
- scene.add(boss);
-
- document.getElementById("boss").style.display="block";
+ p.position.set(x,5,z);
+ p.rotation.x=Math.PI/2;
+ scene.add(p);
+ portals.push({mesh:p,name});
 }
 
-/* ---------- PARTICLES ---------- */
+portal(-15,-15,0xff8b00,"FIND THE BURGERS");
+portal(15,-15,0x00aaff,"SONIC SPEED");
+portal(0,25,0xff00ff,"MEGA OBBY");
 
-const particles=[];
-
-function burst(pos,color=0xffdd22,count=30){
-
- for(let i=0;i<count;i++){
-
-  const p=new THREE.Mesh(
-   new THREE.SphereGeometry(.12,6,6),
-   new THREE.MeshBasicMaterial({color})
-  );
-
-  p.position.copy(pos);
-
-  p.userData.vel=new THREE.Vector3(
-   (Math.random()-.5)*12,
-   Math.random()*10,
-   (Math.random()-.5)*12
-  );
-
-  p.userData.life=1;
-
-  scene.add(p);
-  particles.push(p);
- }
+function distance(a,b){
+ return a.position.distanceTo(b.position);
 }
 
-/* ---------- GAME STATE ---------- */
+let last=performance.now();
 
-let speed=0;
-let ringsCount=0;
-let score=0;
-let hp=100;
-let form="NORMAL";
-let jumping=false;
-let attackCooldown=0;
-
-const keys={};
-
-addEventListener("keydown",e=>{
- keys[e.key.toLowerCase()]=true;
-
- if(e.key==="1")transform("SUPER");
- if(e.key==="2")transform("HYPER");
- if(e.key.toLowerCase()==="r")location.reload();
-});
-
-addEventListener("keyup",e=>{
- keys[e.key.toLowerCase()]=false;
-});
-
-/* ---------- TRANSFORM ---------- */
-
-function transform(type){
-
- if(type==="SUPER" && ringsCount<20)return;
- if(type==="HYPER" && ringsCount<50)return;
-
- form=type;
-
- if(type==="SUPER"){
-  blue.color.set(0xffd91a);
-  document.body.style.background="#fff2a0";
- }
-
- if(type==="HYPER"){
-  blue.color.set(0xff66ff);
-  document.body.style.background="#a0ffff";
- }
-}
-
-/* ---------- UPDATE ---------- */
-
-const clock=new THREE.Clock();
-
-function update(){
-
- const dt=Math.min(clock.getDelta(),.033);
-
- /* movement */
-
- let direction=0;
-
- if(keys["a"]||keys["arrowleft"])direction-=1;
- if(keys["d"]||keys["arrowright"])direction+=1;
-
- const boost=keys["shift"];
-
- const maxSpeed=
-  form==="HYPER"?2.8:
-  form==="SUPER"?2.1:
-  boost?1.8:1.05;
-
- speed+=(direction*maxSpeed-speed)*.09;
-
- if(!direction)speed*=.94;
-
- sonic.position.x+=speed*3.2;
-
- /* jump */
-
- if((keys["w"]||keys[" "])&&!jumping){
-
-  jumping=true;
-  sonic.userData.vy=.75;
- }
-
- if(jumping){
-
-  sonic.position.y+=sonic.userData.vy;
-  sonic.userData.vy-=.035;
-
-  if(sonic.position.y<=4){
-
-   sonic.position.y=4;
-   jumping=false;
-   sonic.userData.vy=0;
-  }
- }
-
- /* rotation */
-
- sonic.rotation.z=-speed*.025;
-
- /* boost effects */
-
- if(Math.abs(speed)>1.2)
-  burst(
-   new THREE.Vector3(
-    sonic.position.x-2,
-    sonic.position.y,
-    sonic.position.z
-   ),
-   form==="HYPER"?0xff55ff:
-   form==="SUPER"?0xffff22:
-   0x33bbff,
-   2
-  );
-
- /* rings */
-
- for(const ring of rings){
-
-  if(!ring.visible)continue;
-
-  ring.rotation.y+=.08;
-
-  if(ring.position.distanceTo(sonic.position)<4){
-
-   ring.visible=false;
-   ringsCount++;
-   score+=100;
-
-   burst(ring.position,0xffd21f,12);
-  }
- }
-
- /* attack */
-
- attackCooldown-=dt;
-
- if(keys["e"]&&attackCooldown<=0){
-
-  attackCooldown=.35;
-  burst(
-   new THREE.Vector3(
-    sonic.position.x+5,
-    sonic.position.y,
-    sonic.position.z
-   ),
-   form==="HYPER"?0xff55ff:0x55ddff,
-   25
-  );
-
-  if(bossActive && boss &&
-     sonic.position.distanceTo(boss.position)<35){
-
-   bossHP-=70;
-
-   if(bossHP<=0){
-
-    burst(boss.position,0xff4411,100);
-    scene.remove(boss);
-    boss=null;
-    bossActive=false;
-    document.getElementById("boss").style.display="none";
-    score+=5000;
-   }
-  }
- }
-
- /* boss */
-
- if(score>1500&&!bossActive)spawnBoss();
-
- if(bossActive&&boss){
-
-  boss.position.x+=(sonic.position.x+35-boss.position.x)*.008;
-  boss.rotation.y+=.015;
-
-  if(boss.position.distanceTo(sonic.position)<18){
-
-   hp-=.15;
-  }
-
-  document.getElementById("bossFill").style.width=
-   Math.max(0,bossHP/1000*100)+"%";
- }
-
- /* Verity follows */
-
- verity.position.x+=(sonic.position.x-8-verity.position.x)*.035;
- verity.position.y=2.5+Math.sin(performance.now()*.004)*.5;
- verity.rotation.y+=.01;
-
- /* particles */
-
- for(let i=particles.length-1;i>=0;i--){
-
-  const p=particles[i];
-
-  p.position.addScaledVector(p.userData.vel,dt);
-  p.userData.vel.y-=15*dt;
-  p.userData.life-=dt;
-
-  p.scale.setScalar(Math.max(0,p.userData.life));
-
-  if(p.userData.life<=0){
-
-   scene.remove(p);
-   particles.splice(i,1);
-  }
- }
-
- /* camera */
-
- const target=new THREE.Vector3(
-  sonic.position.x-16,
-  sonic.position.y+8,
-  sonic.position.z+22
- );
-
- camera.position.lerp(target,.075);
-
- camera.lookAt(
-  sonic.position.x+12,
-  sonic.position.y+2,
-  sonic.position.z
- );
-
- /* UI */
-
- document.getElementById("stats").innerHTML=
- `💨 Speed: ${(Math.abs(speed)*100).toFixed(0)}<br>`+
- `💍 Rings: ${ringsCount}<br>`+
- `❤️ HP: ${Math.max(0,hp).toFixed(0)}<br>`+
- `🏆 Score: ${score}<br>`+
- `⭐ Form: ${form}`;
-
-}
-
-/* ---------- ANIMATION ---------- */
-
-function animate(){
-
+function animate(now){
  requestAnimationFrame(animate);
 
- update();
+ const dt=Math.min((now-last)/16,2);
+ last=now;
+
+ let dx=0,dz=0;
+
+ if(keys.KeyW)dz-=1;
+ if(keys.KeyS)dz+=1;
+ if(keys.KeyA)dx-=1;
+ if(keys.KeyD)dx+=1;
+
+ const moving=dx||dz;
+
+ if(moving){
+  const len=Math.hypot(dx,dz);
+  dx/=len;dz/=len;
+
+  let speed=.22;
+
+  if(keys.ShiftLeft||keys.ShiftRight){
+   speed=.8;
+   speedBoost=4;
+  }else speedBoost=1;
+
+  player.position.x+=dx*speed*dt;
+  player.position.z+=dz*speed*dt;
+
+  player.rotation.y=Math.atan2(dx,dz);
+ }
+
+ velocityY-=.018*dt;
+ player.position.y+=velocityY*dt;
+
+ if(player.position.y<0){
+  player.position.y=0;
+  velocityY=0;
+ }
+
+ // Camera follows player
+ const target=new THREE.Vector3(
+  player.position.x,
+  player.position.y+5,
+  player.position.z+12
+ );
+ camera.position.lerp(target,.12);
+ camera.lookAt(
+  player.position.x,
+  player.position.y+2.5,
+  player.position.z
+ );
+
+ // Collect burgers
+ for(let i=burgers.length-1;i>=0;i--){
+  if(distance(player,burgers[i])<3){
+   scene.remove(burgers[i]);
+   burgers.splice(i,1);
+   burgerCount++;
+   coins+=25;
+  }
+ }
+
+ // Portal detection
+ for(const p of portals){
+  if(player.position.distanceTo(p.mesh.position)<7){
+   world=p.name;
+  }
+ }
+
+ document.getElementById("coins").textContent=coins;
+ document.getElementById("burgers").textContent=burgerCount;
+ document.getElementById("speed").textContent=speedBoost;
+ document.getElementById("world").textContent=world;
 
  renderer.render(scene,camera);
 }
 
-animate();
-
-/* ---------- RESIZE ---------- */
+animate(performance.now());
 
 addEventListener("resize",()=>{
-
  camera.aspect=innerWidth/innerHeight;
  camera.updateProjectionMatrix();
-
  renderer.setSize(innerWidth,innerHeight);
 });
 </script>
