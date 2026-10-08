@@ -1,269 +1,94 @@
-<!DOCTYPE html>
+from pathlib import Path
+
+html = r'''<!doctype html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Roblox Mega World</title>
+<meta charset="utf-8">
+<title>Mega Battleground World</title>
 <style>
-html,body{margin:0;overflow:hidden;background:#111;font-family:Arial}
-canvas{display:block}
-#ui{
- position:fixed;top:15px;left:15px;color:white;
- background:rgba(0,0,0,.65);padding:14px;border-radius:10px;
- font-size:18px;line-height:1.5
-}
-#msg{
- position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
- color:white;background:rgba(0,0,0,.7);padding:12px 22px;
- border-radius:10px;font-size:20px
-}
+body{margin:0;background:#070914;color:white;font-family:Arial,sans-serif;overflow:hidden}
+#hud{position:fixed;top:12px;left:12px;z-index:5;background:#10152acc;padding:12px 16px;border-radius:14px;font-weight:bold}
+#menu{position:fixed;top:12px;right:12px;z-index:5;display:flex;gap:6px;flex-wrap:wrap;max-width:430px}
+button{background:#20294a;color:white;border:1px solid #5969a8;border-radius:10px;padding:9px 12px;cursor:pointer}
+button:hover{background:#354477}
+#game{width:100vw;height:100vh;position:relative;background:
+radial-gradient(circle at 50% 45%,#263f76 0 8%,#142447 25%,#090d1c 70%)}
+#arena{position:absolute;left:50%;top:50%;width:760px;height:500px;transform:translate(-50%,-50%);
+border:5px solid #7e9cff;border-radius:28px;background:linear-gradient(#1c3760,#10182b);
+box-shadow:0 0 60px #5b79ff66}
+.player,.enemy{position:absolute;width:48px;height:70px;border-radius:18px 18px 10px 10px;transition:.08s}
+.player{background:#27a8ff;box-shadow:0 0 20px #27a8ff}
+.enemy{background:#d43b6a;box-shadow:0 0 20px #d43b6a}
+.core{position:absolute;left:50%;top:50%;width:90px;height:90px;transform:translate(-50%,-50%);border-radius:50%;
+background:#c8d5ff;box-shadow:0 0 30px #fff,0 0 90px #6b82ff}
+.label{position:absolute;top:-25px;width:120px;left:50%;transform:translateX(-50%);text-align:center;font-size:12px}
+#log{position:fixed;bottom:12px;left:12px;z-index:5;width:390px;max-height:150px;overflow:auto;background:#090c16dd;border-radius:12px;padding:10px}
+#controls{position:fixed;bottom:12px;right:12px;z-index:5;background:#10152acc;padding:10px;border-radius:14px}
+.flash{animation:flash .35s}
+@keyframes flash{50%{filter:brightness(3);transform:scale(1.25)}}
 </style>
 </head>
 <body>
-<div id="ui">
-💰 Coins: <span id="coins">0</span><br>
-🍔 Burgers: <span id="burgers">0</span>/10<br>
-💨 Speed: <span id="speed">1</span>x<br>
-🎮 World: <span id="world">MEGA HUB</span>
+<div id="hud">⚡ MEGA WORLD<br>
+Coins: <span id="coins">100</span> | Rings: <span id="rings">0</span> | Level: <span id="level">1</span><br>
+Character: <span id="char">KJ</span> | HP: <span id="hp">100</span>
 </div>
-<div id="msg">WASD = Move | SHIFT = Boost | SPACE = Jump</div>
-
-<script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
+<div id="menu">
+<button onclick="choose('KJ')">👊 KJ</button>
+<button onclick="choose('Sorcerer')">🧙 Sorcerer</button>
+<button onclick="choose('Speedster')">⚡ Speedster</button>
+<button onclick="world('Hub')">🏙️ Hub</button>
+<button onclick="world('Speed')">🌪️ Speed</button>
+<button onclick="world('Chao')">🐣 Chao</button>
+<button onclick="world('Race')">🏁 Race</button>
+<button onclick="world('Battle')">⚔️ Battle</button>
+<button onclick="world('Cosmic')">🌌 Cosmic</button>
+</div>
+<div id="game"><div id="arena">
+<div class="core"></div>
+<div id="p" class="player"><span class="label">YOU</span></div>
+<div id="e" class="enemy"><span class="label">TRAINING BOSS</span></div>
+</div></div>
+<div id="controls">
+<b>WASD / Arrows</b> Move<br>
+<button onclick="attack(1)">1 Ravage</button>
+<button onclick="attack(2)">2 Ignition</button>
+<button onclick="attack(3)">3 Dropkick</button>
+<button onclick="attack(4)">4 Unlimited Flex</button>
+<button onclick="attack(5)">5 Sorcerer Attack</button>
+<button onclick="emote()">🎭 Emote</button>
+</div>
+<div id="log"></div>
 <script>
-const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x78b9ff);
-
-const camera=new THREE.PerspectiveCamera(
- 75,innerWidth/innerHeight,.1,2000
-);
-camera.position.set(0,8,14);
-
-const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(innerWidth,innerHeight);
-renderer.shadowMap.enabled=true;
-document.body.appendChild(renderer.domElement);
-
-scene.add(new THREE.HemisphereLight(0xffffff,0x555555,2));
-
-const sun=new THREE.DirectionalLight(0xffffff,2);
-sun.position.set(30,60,20);
-sun.castShadow=true;
-scene.add(sun);
-
-const player=new THREE.Group();
-
-const body=new THREE.Mesh(
- new THREE.BoxGeometry(2,2.4,1),
- new THREE.MeshStandardMaterial({color:0x1877f2})
-);
-body.position.y=2.2;
-body.castShadow=true;
-player.add(body);
-
-const head=new THREE.Mesh(
- new THREE.BoxGeometry(2,2,2),
- new THREE.MeshStandardMaterial({color:0xffc58a})
-);
-head.position.y=4.4;
-head.castShadow=true;
-player.add(head);
-
-function limb(x,y,z){
- const m=new THREE.Mesh(
-  new THREE.BoxGeometry(.65,2,.65),
-  new THREE.MeshStandardMaterial({color:0xffc58a})
- );
- m.position.set(x,y,z);
- m.castShadow=true;
- player.add(m);
+const p=document.getElementById('p'), e=document.getElementById('e'), logEl=document.getElementById('log');
+let x=350,y=220,ex=580,ey=220,coins=100,rings=0,level=1,hp=100,charName='KJ',worldName='Hub';
+function log(s){logEl.innerHTML='<div>'+s+'</div>'+logEl.innerHTML; if(logEl.children.length>8)logEl.lastChild.remove()}
+function hud(){coinsEl.textContent=coins;ringsEl.textContent=rings;levelEl.textContent=level;charEl.textContent=charName;hpEl.textContent=hp}
+const coinsEl=document.getElementById('coins'),ringsEl=document.getElementById('rings'),levelEl=document.getElementById('level'),charEl=document.getElementById('char'),hpEl=document.getElementById('hp');
+function pos(){p.style.left=x+'px';p.style.top=y+'px';e.style.left=ex+'px';e.style.top=ey+'px'}
+function choose(c){charName=c;log('Selected '+c);hud()}
+function world(w){worldName=w;log('Entered '+w+' World'); if(w==='Speed'){rings+=25;coins+=50}else if(w==='Chao'){coins+=30}else if(w==='Race'){coins+=75}else if(w==='Cosmic'){rings+=100}else if(w==='Battle'){hp=100} hud()}
+function hit(dmg,name){e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash');ex=Math.max(20,Math.min(690,ex+(Math.random()*100-50)));ey=Math.max(20,Math.min(430,ey+(Math.random()*100-50)));coins+=dmg;rings+=Math.ceil(dmg/10);log(name+'! -'+dmg+' HP');if(coins%100<dmg)level++;hud();pos()}
+function attack(n){
+if(n===1)hit(20,'🔥 Ravage');
+if(n===2)hit(30,'💥 Ignition Burst');
+if(n===3)hit(35,'⚡ 20-20-20 Dropkick');
+if(n===4)hit(60,'🌟 Unlimited Flex Works');
+if(n===5){hit(45,'🧙 Sorcerer Attack');log('✨ Original magic VFX activated!')}
 }
-limb(-1.3,1.4,0);
-limb(1.3,1.4,0);
-
-const leg1=new THREE.Mesh(
- new THREE.BoxGeometry(.75,2,.75),
- new THREE.MeshStandardMaterial({color:0x222222})
-);
-leg1.position.set(-.55,.4,0);
-player.add(leg1);
-
-const leg2=leg1.clone();
-leg2.position.x=.55;
-player.add(leg2);
-
-player.position.set(0,0,0);
-scene.add(player);
-
-const ground=new THREE.Mesh(
- new THREE.BoxGeometry(500,1,500),
- new THREE.MeshStandardMaterial({color:0x55aa55})
-);
-ground.position.y=-.5;
-ground.receiveShadow=true;
-scene.add(ground);
-
-const keys={};
-addEventListener("keydown",e=>{
- keys[e.code]=true;
- if(e.code==="Space" && player.position.y<=.05)
-   velocityY=.32;
+function emote(){const a=['⚡ Flash Step','💪 Titan Flex','😎 Zero Effort','🔥 Heat Check','🥶 Ice Cold','👑 Boss Arrival','🌌 Emerge','🔒 Eternal Seal'];log('🎭 '+a[Math.floor(Math.random()*a.length)]);p.classList.add('flash');setTimeout(()=>p.classList.remove('flash'),350)}
+addEventListener('keydown',ev=>{
+let s=charName==='Speedster'?18:10;if(ev.key==='Shift')s=30;
+if(['w','ArrowUp'].includes(ev.key))y-=s;if(['s','ArrowDown'].includes(ev.key))y+=s;if(['a','ArrowLeft'].includes(ev.key))x-=s;if(['d','ArrowRight'].includes(ev.key))x+=s;
+x=Math.max(5,Math.min(700,x));y=Math.max(5,Math.min(430,y));pos();
+if(ev.key==='1')attack(1);if(ev.key==='2')attack(2);if(ev.key==='3')attack(3);if(ev.key==='4')attack(4);if(ev.key==='5')attack(5);if(ev.key==='e')emote();
 });
-addEventListener("keyup",e=>keys[e.code]=false);
-
-let velocityY=0;
-let coins=0;
-let burgerCount=0;
-let world="MEGA HUB";
-let speedBoost=1;
-
-const burgers=[];
-
-function makeBurger(x,y,z){
- const g=new THREE.Group();
-
- const bun=new THREE.Mesh(
-  new THREE.SphereGeometry(.8,.16,8),
-  new THREE.MeshStandardMaterial({color:0xd88922})
- );
- bun.scale.y=.45;
-
- const meat=new THREE.Mesh(
-  new THREE.BoxGeometry(1.2,.25,.8),
-  new THREE.MeshStandardMaterial({color:0x54200e})
- );
- meat.position.y=-.15;
-
- const cheese=new THREE.Mesh(
-  new THREE.BoxGeometry(1.3,.12,.9),
-  new THREE.MeshStandardMaterial({color:0xffd51f})
- );
- cheese.position.y=.02;
-
- g.add(bun,meat,cheese);
- g.position.set(x,y,z);
- scene.add(g);
- burgers.push(g);
-}
-
-for(let i=0;i<10;i++){
- makeBurger(
-  (Math.random()-.5)*100,
-  1,
-  (Math.random()-.5)*100
- );
-}
-
-const portals=[];
-
-function portal(x,z,color,name){
- const p=new THREE.Mesh(
-  new THREE.TorusGeometry(5,.7,16,40),
-  new THREE.MeshStandardMaterial({
-   color,
-   emissive:color,
-   emissiveIntensity:1
-  })
- );
- p.position.set(x,5,z);
- p.rotation.x=Math.PI/2;
- scene.add(p);
- portals.push({mesh:p,name});
-}
-
-portal(-15,-15,0xff8b00,"FIND THE BURGERS");
-portal(15,-15,0x00aaff,"SONIC SPEED");
-portal(0,25,0xff00ff,"MEGA OBBY");
-
-function distance(a,b){
- return a.position.distanceTo(b.position);
-}
-
-let last=performance.now();
-
-function animate(now){
- requestAnimationFrame(animate);
-
- const dt=Math.min((now-last)/16,2);
- last=now;
-
- let dx=0,dz=0;
-
- if(keys.KeyW)dz-=1;
- if(keys.KeyS)dz+=1;
- if(keys.KeyA)dx-=1;
- if(keys.KeyD)dx+=1;
-
- const moving=dx||dz;
-
- if(moving){
-  const len=Math.hypot(dx,dz);
-  dx/=len;dz/=len;
-
-  let speed=.22;
-
-  if(keys.ShiftLeft||keys.ShiftRight){
-   speed=.8;
-   speedBoost=4;
-  }else speedBoost=1;
-
-  player.position.x+=dx*speed*dt;
-  player.position.z+=dz*speed*dt;
-
-  player.rotation.y=Math.atan2(dx,dz);
- }
-
- velocityY-=.018*dt;
- player.position.y+=velocityY*dt;
-
- if(player.position.y<0){
-  player.position.y=0;
-  velocityY=0;
- }
-
- // Camera follows player
- const target=new THREE.Vector3(
-  player.position.x,
-  player.position.y+5,
-  player.position.z+12
- );
- camera.position.lerp(target,.12);
- camera.lookAt(
-  player.position.x,
-  player.position.y+2.5,
-  player.position.z
- );
-
- // Collect burgers
- for(let i=burgers.length-1;i>=0;i--){
-  if(distance(player,burgers[i])<3){
-   scene.remove(burgers[i]);
-   burgers.splice(i,1);
-   burgerCount++;
-   coins+=25;
-  }
- }
-
- // Portal detection
- for(const p of portals){
-  if(player.position.distanceTo(p.mesh.position)<7){
-   world=p.name;
-  }
- }
-
- document.getElementById("coins").textContent=coins;
- document.getElementById("burgers").textContent=burgerCount;
- document.getElementById("speed").textContent=speedBoost;
- document.getElementById("world").textContent=world;
-
- renderer.render(scene,camera);
-}
-
-animate(performance.now());
-
-addEventListener("resize",()=>{
- camera.aspect=innerWidth/innerHeight;
- camera.updateProjectionMatrix();
- renderer.setSize(innerWidth,innerHeight);
-});
+setInterval(()=>{rings++;coins+=2;if(rings%10===0)level++;hud()},2500);
+pos();hud();log('🌎 Mega World loaded! Explore the worlds and battle the boss.');
 </script>
 </body>
-</html>
+</html>'''
+path = Path("/mnt/data/mega_battleground_world.html")
+path.write_text(html, encoding="utf-8")
+print(f"[Download the playable Mega World game](sandbox:{path})")
+
