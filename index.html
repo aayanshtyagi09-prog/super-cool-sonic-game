@@ -4,91 +4,135 @@ html = r'''<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>Mega Battleground World</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mega World — Whole Game</title>
 <style>
-body{margin:0;background:#070914;color:white;font-family:Arial,sans-serif;overflow:hidden}
-#hud{position:fixed;top:12px;left:12px;z-index:5;background:#10152acc;padding:12px 16px;border-radius:14px;font-weight:bold}
-#menu{position:fixed;top:12px;right:12px;z-index:5;display:flex;gap:6px;flex-wrap:wrap;max-width:430px}
-button{background:#20294a;color:white;border:1px solid #5969a8;border-radius:10px;padding:9px 12px;cursor:pointer}
-button:hover{background:#354477}
-#game{width:100vw;height:100vh;position:relative;background:
-radial-gradient(circle at 50% 45%,#263f76 0 8%,#142447 25%,#090d1c 70%)}
-#arena{position:absolute;left:50%;top:50%;width:760px;height:500px;transform:translate(-50%,-50%);
-border:5px solid #7e9cff;border-radius:28px;background:linear-gradient(#1c3760,#10182b);
-box-shadow:0 0 60px #5b79ff66}
-.player,.enemy{position:absolute;width:48px;height:70px;border-radius:18px 18px 10px 10px;transition:.08s}
-.player{background:#27a8ff;box-shadow:0 0 20px #27a8ff}
-.enemy{background:#d43b6a;box-shadow:0 0 20px #d43b6a}
-.core{position:absolute;left:50%;top:50%;width:90px;height:90px;transform:translate(-50%,-50%);border-radius:50%;
-background:#c8d5ff;box-shadow:0 0 30px #fff,0 0 90px #6b82ff}
-.label{position:absolute;top:-25px;width:120px;left:50%;transform:translateX(-50%);text-align:center;font-size:12px}
-#log{position:fixed;bottom:12px;left:12px;z-index:5;width:390px;max-height:150px;overflow:auto;background:#090c16dd;border-radius:12px;padding:10px}
-#controls{position:fixed;bottom:12px;right:12px;z-index:5;background:#10152acc;padding:10px;border-radius:14px}
-.flash{animation:flash .35s}
-@keyframes flash{50%{filter:brightness(3);transform:scale(1.25)}}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#06101d;color:#fff}
+#game{position:relative;width:100%;height:100%;background:linear-gradient(#163b60,#07111d)}
+#world{position:absolute;inset:75px 12px 82px;border:3px solid #7295ff;border-radius:22px;overflow:hidden;background:radial-gradient(circle at center,#315d82,#10283f 42%,#081522 78%)}
+#world:before{content:"";position:absolute;inset:8%;border:2px solid #355e82;border-radius:50%}
+#world:after{content:"";position:absolute;inset:25%;border:2px solid #355e82;border-radius:50%}
+#core{position:absolute;left:50%;top:50%;width:76px;height:76px;transform:translate(-50%,-50%);border-radius:50%;background:#eaf0ff;box-shadow:0 0 28px #fff,0 0 90px #557dff;z-index:1}
+.actor{position:absolute;width:42px;height:58px;border-radius:13px;z-index:5}
+.actor:after{content:"";position:absolute;width:19px;height:19px;left:11px;top:-14px;border-radius:50%;background:inherit}
+#hero{background:#19adff;box-shadow:0 0 22px #19adff}
+#boss{background:#e33d6d;box-shadow:0 0 22px #e33d6d}
+.tag{position:absolute;top:-34px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:bold}
+.panel{position:fixed;z-index:20;background:#081226ee;border:1px solid #536c9f;border-radius:13px;padding:10px}
+#hud{top:10px;left:10px;line-height:1.55}
+#worlds{top:10px;right:10px;max-width:520px;display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
+#combat{left:10px;bottom:10px;max-width:700px}
+#log{right:10px;bottom:10px;width:320px;max-height:130px;overflow:hidden;font-size:12px;line-height:1.45}
+button{border:1px solid #5b73a7;background:#1b2b4c;color:#fff;border-radius:8px;padding:7px 9px;cursor:pointer}
+button:hover{background:#304a78}
+.flash{animation:flash .25s}
+@keyframes flash{50%{filter:brightness(3);transform:scale(1.35)}}
 </style>
 </head>
 <body>
-<div id="hud">⚡ MEGA WORLD<br>
-Coins: <span id="coins">100</span> | Rings: <span id="rings">0</span> | Level: <span id="level">1</span><br>
-Character: <span id="char">KJ</span> | HP: <span id="hp">100</span>
+<div id="game">
+<div id="world">
+<div id="core"></div>
+<div id="hero" class="actor"><span class="tag">YOU</span></div>
+<div id="boss" class="actor"><span class="tag">TRAINING BOSS</span></div>
 </div>
-<div id="menu">
-<button onclick="choose('KJ')">👊 KJ</button>
-<button onclick="choose('Sorcerer')">🧙 Sorcerer</button>
-<button onclick="choose('Speedster')">⚡ Speedster</button>
-<button onclick="world('Hub')">🏙️ Hub</button>
-<button onclick="world('Speed')">🌪️ Speed</button>
-<button onclick="world('Chao')">🐣 Chao</button>
-<button onclick="world('Race')">🏁 Race</button>
-<button onclick="world('Battle')">⚔️ Battle</button>
-<button onclick="world('Cosmic')">🌌 Cosmic</button>
+
+<div id="hud" class="panel">
+<b>🌎 MEGA WORLD</b><br>
+👊 <span id="char">KJ</span> &nbsp; 🌍 <span id="zone">Hub</span><br>
+❤️ <span id="hp">100</span> &nbsp; ⚡ <span id="energy">100</span><br>
+💰 <span id="coins">100</span> &nbsp; 💍 <span id="rings">0</span> &nbsp; ⭐ Lv.<span id="level">1</span>
 </div>
-<div id="game"><div id="arena">
-<div class="core"></div>
-<div id="p" class="player"><span class="label">YOU</span></div>
-<div id="e" class="enemy"><span class="label">TRAINING BOSS</span></div>
-</div></div>
-<div id="controls">
-<b>WASD / Arrows</b> Move<br>
-<button onclick="attack(1)">1 Ravage</button>
-<button onclick="attack(2)">2 Ignition</button>
-<button onclick="attack(3)">3 Dropkick</button>
-<button onclick="attack(4)">4 Unlimited Flex</button>
-<button onclick="attack(5)">5 Sorcerer Attack</button>
+
+<div id="worlds" class="panel">
+<button onclick="char('KJ')">👊 KJ</button>
+<button onclick="char('Sorcerer')">🧙 Sorcerer</button>
+<button onclick="char('Speedster')">⚡ Speedster</button>
+<button onclick="zone('Hub')">🏙️ Hub</button>
+<button onclick="zone('Speed')">🌪️ Speed</button>
+<button onclick="zone('Burger')">🍔 Burger</button>
+<button onclick="zone('Chao')">🐣 Chao</button>
+<button onclick="zone('Obby')">🧱 Obby</button>
+<button onclick="zone('Race')">🏁 Race</button>
+<button onclick="zone('Battle')">⚔️ Battle</button>
+<button onclick="zone('Horror')">👻 Horror</button>
+<button onclick="zone('Cosmic')">🌌 Cosmic</button>
+</div>
+
+<div id="combat" class="panel">
+<b>WASD / ARROWS</b> Move • <b>SHIFT</b> Boost • <b>E</b> Emote<br>
+<button onclick="atk('Ravage',20)">1 Ravage</button>
+<button onclick="atk('Ignition Burst',30)">2 Ignition</button>
+<button onclick="atk('20-20-20 Dropkick',35)">3 Dropkick</button>
+<button onclick="atk('Unlimited Flex Works',60)">4 Unlimited Flex</button>
+<button onclick="atk('Sorcerer Attack',45)">5 Sorcerer Attack</button>
 <button onclick="emote()">🎭 Emote</button>
 </div>
-<div id="log"></div>
+<div id="log" class="panel"></div>
+</div>
+
 <script>
-const p=document.getElementById('p'), e=document.getElementById('e'), logEl=document.getElementById('log');
-let x=350,y=220,ex=580,ey=220,coins=100,rings=0,level=1,hp=100,charName='KJ',worldName='Hub';
-function log(s){logEl.innerHTML='<div>'+s+'</div>'+logEl.innerHTML; if(logEl.children.length>8)logEl.lastChild.remove()}
-function hud(){coinsEl.textContent=coins;ringsEl.textContent=rings;levelEl.textContent=level;charEl.textContent=charName;hpEl.textContent=hp}
-const coinsEl=document.getElementById('coins'),ringsEl=document.getElementById('rings'),levelEl=document.getElementById('level'),charEl=document.getElementById('char'),hpEl=document.getElementById('hp');
-function pos(){p.style.left=x+'px';p.style.top=y+'px';e.style.left=ex+'px';e.style.top=ey+'px'}
-function choose(c){charName=c;log('Selected '+c);hud()}
-function world(w){worldName=w;log('Entered '+w+' World'); if(w==='Speed'){rings+=25;coins+=50}else if(w==='Chao'){coins+=30}else if(w==='Race'){coins+=75}else if(w==='Cosmic'){rings+=100}else if(w==='Battle'){hp=100} hud()}
-function hit(dmg,name){e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash');ex=Math.max(20,Math.min(690,ex+(Math.random()*100-50)));ey=Math.max(20,Math.min(430,ey+(Math.random()*100-50)));coins+=dmg;rings+=Math.ceil(dmg/10);log(name+'! -'+dmg+' HP');if(coins%100<dmg)level++;hud();pos()}
-function attack(n){
-if(n===1)hit(20,'🔥 Ravage');
-if(n===2)hit(30,'💥 Ignition Burst');
-if(n===3)hit(35,'⚡ 20-20-20 Dropkick');
-if(n===4)hit(60,'🌟 Unlimited Flex Works');
-if(n===5){hit(45,'🧙 Sorcerer Attack');log('✨ Original magic VFX activated!')}
+(()=> {
+const $=id=>document.getElementById(id);
+let x=100,y=150,bx=610,by=190;
+let who="KJ",place="Hub",hp=100,en=100,coins=100,rings=0,level=1,boost=false;
+const emotes=["Flash Step","Titan Flex","Zero Effort","Heat Check","Ice Cold","Boss Arrival","Emerge","Eternal Seal","Champion","Battle Rockstar","Limit Break","Infinite Flex"];
+
+function log(t){let d=document.createElement("div");d.textContent=t;$("log").prepend(d);while($("log").children.length>8)$("log").lastChild.remove()}
+function ui(){ $("char").textContent=who;$("zone").textContent=place;$("hp").textContent=Math.max(0,hp);$("energy").textContent=Math.floor(en);$("coins").textContent=coins;$("rings").textContent=rings;$("level").textContent=level }
+function draw(){$("hero").style.left=x+"px";$("hero").style.top=y+"px";$("boss").style.left=bx+"px";$("boss").style.top=by+"px"}
+function clamp(){x=Math.max(8,Math.min($("world").clientWidth-52,x));y=Math.max(45,Math.min($("world").clientHeight-72,y))}
+function char(c){who=c;log("Selected "+c+"!");ui()}
+function zone(z){
+ place=z;
+ if(z==="Speed"){rings+=30;coins+=50}
+ if(z==="Burger"){coins+=100}
+ if(z==="Chao"){coins+=40}
+ if(z==="Obby"){level++}
+ if(z==="Race"){coins+=120}
+ if(z==="Cosmic"){rings+=100;level+=2}
+ if(z==="Battle")hp=100;
+ log("Entered "+z+" World!");
+ ui()
 }
-function emote(){const a=['⚡ Flash Step','💪 Titan Flex','😎 Zero Effort','🔥 Heat Check','🥶 Ice Cold','👑 Boss Arrival','🌌 Emerge','🔒 Eternal Seal'];log('🎭 '+a[Math.floor(Math.random()*a.length)]);p.classList.add('flash');setTimeout(()=>p.classList.remove('flash'),350)}
-addEventListener('keydown',ev=>{
-let s=charName==='Speedster'?18:10;if(ev.key==='Shift')s=30;
-if(['w','ArrowUp'].includes(ev.key))y-=s;if(['s','ArrowDown'].includes(ev.key))y+=s;if(['a','ArrowLeft'].includes(ev.key))x-=s;if(['d','ArrowRight'].includes(ev.key))x+=s;
-x=Math.max(5,Math.min(700,x));y=Math.max(5,Math.min(430,y));pos();
-if(ev.key==='1')attack(1);if(ev.key==='2')attack(2);if(ev.key==='3')attack(3);if(ev.key==='4')attack(4);if(ev.key==='5')attack(5);if(ev.key==='e')emote();
+function atk(name,dmg){
+ if(en<10){log("⚠️ Energy too low!");return}
+ en-=10; coins+=dmg; rings+=Math.ceil(dmg/10);
+ bx=Math.max(30,Math.min($("world").clientWidth-70,bx+(Math.random()*180-90)));
+ by=Math.max(55,Math.min($("world").clientHeight-90,by+(Math.random()*140-70)));
+ $("boss").classList.remove("flash");void $("boss").offsetWidth;$("boss").classList.add("flash");
+ if(coins>=level*250){level++;log("⭐ LEVEL UP!")}
+ log("💥 "+name+" — "+dmg+" damage!");
+ if(name==="Unlimited Flex Works")log("🌟 MASSIVE FINISHER!");
+ if(name==="Sorcerer Attack")log("🧙 Original sorcerer-style magic effect!");
+ draw();ui()
+}
+function emote(){let e=emotes[Math.floor(Math.random()*emotes.length)];$("hero").classList.remove("flash");void $("hero").offsetWidth;$("hero").classList.add("flash");log("🎭 "+e)}
+function move(dx,dy){let s=boost?(who==="Speedster"?22:17):(who==="Speedster"?13:8);x+=dx*s;y+=dy*s;clamp();draw()}
+addEventListener("keydown",e=>{
+let k=e.key.toLowerCase();
+if(k==="shift"){boost=true;return}
+if(k==="e"){emote();return}
+if(k==="1"){atk("Ravage",20);return}
+if(k==="2"){atk("Ignition Burst",30);return}
+if(k==="3"){atk("20-20-20 Dropkick",35);return}
+if(k==="4"){atk("Unlimited Flex Works",60);return}
+if(k==="5"){atk("Sorcerer Attack",45);return}
+if(k==="w"||k==="arrowup")move(0,-1);
+if(k==="s"||k==="arrowdown")move(0,1);
+if(k==="a"||k==="arrowleft")move(-1,0);
+if(k==="d"||k==="arrowright")move(1,0);
 });
-setInterval(()=>{rings++;coins+=2;if(rings%10===0)level++;hud()},2500);
-pos();hud();log('🌎 Mega World loaded! Explore the worlds and battle the boss.');
+addEventListener("keyup",e=>{if(e.key.toLowerCase()==="shift")boost=false});
+setInterval(()=>{en=Math.min(100,en+4);rings++;coins+=3;if(rings%25===0){level++;log("⭐ Ring milestone! Level "+level)}ui()},2000);
+setInterval(()=>{if(place==="Battle"&&Math.random()<.4){hp-=5;log("💥 Boss attack!");if(hp<=0){hp=100;x=100;y=150;log("❤️ Respawned!")}ui()}},1500);
+draw();ui();log("🎮 WHOLE GAME LOADED! WASD to move, 1-5 to attack, E for emote.");
+})();
 </script>
 </body>
 </html>'''
-path = Path("/mnt/data/mega_battleground_world.html")
+
+path = Path("/mnt/data/mega_world_whole_game.html")
 path.write_text(html, encoding="utf-8")
-print(f"[Download the playable Mega World game](sandbox:{path})")
+print(f"[Open the whole playable game](sandbox:{path})")
 
